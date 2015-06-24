@@ -139,6 +139,8 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 			sql += " LIMIT " + limit.toString();
 		}
 		
+		logger.debug("executing query: " + sql);
+		
 		List<PictionUpdate> updates = query(sql, new ResultProcessor<List<PictionUpdate>>() {
 			public List<PictionUpdate> processResults(ResultSet results) throws SQLException {
 				List<PictionUpdate> updates = new ArrayList<PictionUpdate>();

@@ -2,7 +2,9 @@ package edu.berkeley.cspace.piction;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -19,8 +21,10 @@ public class HttpBatchUploader implements BatchUploader {
 	private static final Logger logger = LogManager.getLogger(HttpBatchUploader.class);
 	private CloseableHttpClient client;
 	
-	private static final String BMU_URL = "https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload";
-	private static final String BMU_FILE_PART_NAME = "imagefiles";
+	private String uploadUrl;
+	private String fileFieldName = "imagefiles";
+	private Map<String, String> textFields = new HashMap<String, String>();
+	private String charset = "UTF-8";
 	
 	public HttpBatchUploader() {
 //		CredentialsProvider credsProvider = new BasicCredentialsProvider();
@@ -44,26 +48,21 @@ public class HttpBatchUploader implements BatchUploader {
 	}
 	
 	public void send(List<PictionUpdate> updates) throws UploadException {
-		HttpPost httpPost = new HttpPost(BMU_URL);
+		HttpPost httpPost = new HttpPost(getUploadUrl());
 		MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
 		
-		entityBuilder.setCharset(Charset.forName("UTF-8"));
+		entityBuilder.setCharset(Charset.forName(charset));
 		
-		ContentType textContentType = ContentType.TEXT_PLAIN.withCharset("UTF-8");
+		ContentType textContentType = ContentType.TEXT_PLAIN.withCharset(charset);
+		Map<String, String> textFields = getTextFields();
 		
-		entityBuilder.addTextBody("validateonly", "on", textContentType);
-		entityBuilder.addTextBody("creator", "", textContentType);
-		entityBuilder.addTextBody("overridecreator", "always", textContentType);
-		entityBuilder.addTextBody("rightsholder", "", textContentType);
-		entityBuilder.addTextBody("overriderightsholder", "always", textContentType);
-		entityBuilder.addTextBody("contributor", "", textContentType);
-		entityBuilder.addTextBody("overridecontributor", "always", textContentType);
-		entityBuilder.addTextBody("creator", "", textContentType);
-		entityBuilder.addTextBody("overridecreator", "always", textContentType);
-		entityBuilder.addTextBody("uploadmedia", "yes", textContentType);
+		for (String key : textFields.keySet()) {
+			String value = textFields.get(key);
+			entityBuilder.addTextBody(key, value, textContentType);
+		}
 		
 		for (PictionUpdate update : updates) {
-			entityBuilder.addBinaryBody(BMU_FILE_PART_NAME, update.getBinaryFile(), ContentType.parse(update.getMimeType()), update.getFilename());
+			entityBuilder.addBinaryBody(getFileFieldName(), update.getBinaryFile(), ContentType.parse(update.getMimeType()), update.getFilename());
 		}
 				
 		httpPost.setEntity(entityBuilder.build());
@@ -84,7 +83,7 @@ public class HttpBatchUploader implements BatchUploader {
 
 		if (responseEntity != null) {
 			try {
-				responseContent = EntityUtils.toString(responseEntity, "UTF-8");
+				responseContent = EntityUtils.toString(responseEntity, charset);
 				logger.debug(responseContent);
 			}
 			catch (IOException e) {
@@ -102,5 +101,29 @@ public class HttpBatchUploader implements BatchUploader {
 		if (statusCode < 200 || statusCode > 299) {
 			throw new UploadException(response.getStatusLine().getReasonPhrase());
 		}
+	}
+	
+	public String getUploadUrl() {
+		return uploadUrl;
+	}
+
+	public void setUploadUrl(String uploadUrl) {
+		this.uploadUrl = uploadUrl;
+	}
+
+	public String getFileFieldName() {
+		return fileFieldName;
+	}
+
+	public void setFileFieldName(String fileFieldName) {
+		this.fileFieldName = fileFieldName;
+	}
+
+	public Map<String, String> getTextFields() {
+		return textFields;
+	}
+
+	public void setTextFields(Map<String, String> textFields) {
+		this.textFields = textFields;
 	}
 }

@@ -158,19 +158,11 @@
 						</systemProperty>
 						<systemProperty>
 							<key>pictionBridge.configurationFile</key>
-							<value>${project.build.directory}/conf/local-bampfa-dev-test.xml</value>
+							<value>${project.build.directory}/conf/${env.PICTION_CONF}.xml</value>
 						</systemProperty>
 						<systemProperty>
 							<key>pictionBridge.home</key>
 							<value>${project.build.directory}</value>
-						</systemProperty>
-						<systemProperty>
-							<key>pictionBridge.user</key>
-							<value>${env.PICTION_DB_USER}</value>
-						</systemProperty>
-						<systemProperty>
-							<key>pictionBridge.password</key>
-							<value>${env.PICTION_DB_PW}</value>
 						</systemProperty>
 					</systemProperties>
 				</configuration>

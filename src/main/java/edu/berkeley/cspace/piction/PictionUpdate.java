@@ -4,8 +4,6 @@ import java.io.File;
 import java.sql.Timestamp;
 import java.util.Objects;
 
-import org.apache.commons.lang3.ObjectUtils;
-
 public class PictionUpdate {
 	private long id;
 	private int pictionId;

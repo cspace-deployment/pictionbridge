@@ -40,8 +40,8 @@
 				<!-- Use systemEnvironment to retrieve environment variables. -->
 				<!-- This configuration assumes there is an SSH tunnel running on localhost:9000. -->
 				<property name="url" value="jdbc:postgresql://localhost:9000/bampfa_domain_bampfa" />
-				<property name="username" value="#{ systemProperties['pictionBridge.user'] }" />
-				<property name="password" value="#{ systemProperties['pictionBridge.password'] }" />
+				<property name="username" value="#{ systemEnvironment['PICTION_DB_USER'] }" />
+				<property name="password" value="#{ systemEnvironment['PICTION_DB_PW'] }" />
 			</bean>
 	    </property>
 	</bean>

@@ -1,2 +1,28 @@
 #!/bin/bash
 
+if [ -z $PICTION_HOME ]; then
+    echo "PICTION_HOME must be set"
+    exit 1
+fi
+
+if [ -z $PICTION_CONF ]; then
+    echo "PICTION_CONF must be set"
+    exit 1
+fi
+
+if [ -z $PICTION_DB_USER ]; then
+    echo "PICTION_DB_USER must be set"
+    exit 1
+fi
+
+if [ -z $PICTION_DB_PW ]; then
+    echo "PICTION_DB_PW must be set"
+    exit 1
+fi
+
+CLASSPATH=$PICTION_HOME/lib/piction-bridge-0.0.1-SNAPSHOT.jar:$PICTION_HOME/lib/*
+PICTION_CONF_FILE=$PICTION_HOME/conf/$PICTION_CONF.xml
+LOG4J_CONF_FILE=$PICTION_HOME/conf/log4j2.xml
+MAIN_CLASS=edu.berkeley.cspace.piction.PictionBridge
+
+java -classpath $CLASSPATH -Dlog4j.configurationFile=$LOG4J_CONF_FILE -DpictionBridge.configurationFile=$PICTION_CONF_FILE -DpictionBridge.home=$PICTION_HOME $MAIN_CLASS

@@ -2,6 +2,9 @@ package edu.berkeley.cspace.piction;
 
 import java.io.File;
 import java.sql.Timestamp;
+import java.util.Objects;
+
+import org.apache.commons.lang3.ObjectUtils;
 
 public class PictionUpdate {
 	private long id;
@@ -143,20 +146,20 @@ public class PictionUpdate {
 	public String toString() {
 		StringBuilder str = new StringBuilder();
 		
-		str.append("id: " + this.getId() + "\n");
-		str.append("pictionId: " + this.getPictionId() + "\n");
-		str.append("filename: " + this.getFilename() + "\n");
-		str.append("mimeType: " + this.getMimeType() + "\n");
-		str.append("imgSize: " + this.getImgSize() + "\n");
-		str.append("imgHeight: " + this.getImgHeight() + "\n");
-		str.append("imgWidth: " + this.getImgWidth() + "\n");
-		str.append("objectCsid: " + this.getObjectCsid() + "\n");
-		str.append("mediaCsid: " + this.getMediaCsid() + "\n");
-		str.append("blobCsid: " + this.getBlobCsid() + "\n");
-		str.append("action: " + this.getAction() + "\n");
-		str.append("relationship: " + this.getRelationship() + "\n");
-		str.append("dateTimeAddedToPiction: " + this.getDateTimeAddedToPiction() + "\n");
-		str.append("dateTimeUploaded: " + this.getDateTimeUploaded() + "\n");
+		str.append("id: " + Objects.toString(this.getId(), "") + "\n");
+		str.append("pictionId: " + Objects.toString(this.getPictionId(), "") + "\n");
+		str.append("filename: " + Objects.toString(this.getFilename(), "") + "\n");
+		str.append("mimeType: " + Objects.toString(this.getMimeType(), "") + "\n");
+		str.append("imgSize: " + Objects.toString(this.getImgSize(), "") + "\n");
+		str.append("imgHeight: " + Objects.toString(this.getImgHeight(), "") + "\n");
+		str.append("imgWidth: " + Objects.toString(this.getImgWidth(), "") + "\n");
+		str.append("objectCsid: " + Objects.toString(this.getObjectCsid(), "") + "\n");
+		str.append("mediaCsid: " + Objects.toString(this.getMediaCsid(), "") + "\n");
+		str.append("blobCsid: " + Objects.toString(this.getBlobCsid(), "") + "\n");
+		str.append("action: " + Objects.toString(this.getAction(), "") + "\n");
+		str.append("relationship: " + Objects.toString(this.getRelationship(), "") + "\n");
+		str.append("dateTimeAddedToPiction: " + Objects.toString(this.getDateTimeAddedToPiction(), "") + "\n");
+		str.append("dateTimeUploaded: " + Objects.toString(this.getDateTimeUploaded(), "") + "\n");
 		
 		return str.toString();
 	}

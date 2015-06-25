@@ -10,7 +10,7 @@
 		
 		<!-- The maximum number of updates that may be processed in a single invocation. -->
 		<!-- Comment this out to process all available updates. -->
-		<property name="updateLimit" value="1"/>
+		<property name="updateLimit" value="5"/>
 		
 		<!-- The number of updates to send in a single batch to the BMU. -->
 		<!-- Multiple batches may be submitted until the available updates are exhausted. -->
@@ -27,7 +27,7 @@
 	<bean id="databaseUpdateMonitor" class="edu.berkeley.cspace.piction.DatabaseUpdateMonitor">
 		<!-- The path to a directory where files that need be created will be stored. -->
 		<!-- Extracted binaries will be stored in a subdirectory inside of this directory. -->
-		<property name="workPath" value="/tmp/piction-bridge"/>
+		<property name="workPath" value="#{ systemProperties['pictionBridge.home'] }/work"/>
 
 		<!-- The name of the table into which Piction sends its updates. -->
 		<property name="interfaceTable" value="piction.piction_interface"/>
@@ -38,9 +38,10 @@
 
 				<!-- Database connection info. -->
 				<!-- Use systemEnvironment to retrieve environment variables. -->
-				<property name="url" value="jdbc:postgresql://#{ systemEnvironment['PICTION_DB_HOST'] }:#{ systemEnvironment['PICTION_DB_PORT'] }/bampfa_domain_bampfa" />
-				<property name="username" value="#{ systemEnvironment['PICTION_DB_USER'] }" />
-				<property name="password" value="#{ systemEnvironment['PICTION_DB_PW'] }" />
+				<!-- This configuration assumes there is an SSH tunnel running on localhost:9000. -->
+				<property name="url" value="jdbc:postgresql://localhost:9000/bampfa_domain_bampfa" />
+				<property name="username" value="#{ systemProperties['pictionBridge.user'] }" />
+				<property name="password" value="#{ systemProperties['pictionBridge.password'] }" />
 			</bean>
 	    </property>
 	</bean>
@@ -65,7 +66,7 @@
 				<entry key="overridecreator" value="always"/>
 				
 				<!-- Uncomment validateonly to test the upload without actually queueing a job. -->
-				<entry key="validateonly" value="on"/>
+				<!-- <entry key="validateonly" value="on"/> -->
 				
 				<!-- Uncomment uploadmedia to queue the job for offline processing. -->
 				<entry key="uploadmedia" value="yes"/>

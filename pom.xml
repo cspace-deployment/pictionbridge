@@ -2,9 +2,13 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.berkeley.cspace</groupId>
-	<artifactId>piction-bridge</artifactId>
+	<artifactId>pictionbridge</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -54,6 +58,17 @@
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<!-- Exclude conf files from the jar, since we'll be putting them in -->
+				<!-- the conf directory of the distribution, using the assembly plugin. -->
+				<excludes>
+					<exclude>**/conf/**</exclude>
+				</excludes>
+			</resource>
+	    </resources>
+	    
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -84,7 +99,28 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
+  			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.7</version>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/conf</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/resources/conf</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+  			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.5.5</version>
 				<configuration>
@@ -94,13 +130,50 @@
 				</configuration>
 				<executions>
 					<execution>
-						<id>make-assembly</id> <!-- this is used for inheritance merges -->
-						<phase>package</phase> <!-- bind to the packaging phase -->
+						<id>make-assembly</id>
+						<phase>package</phase>
 						<goals>
 							<goal>single</goal>
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.4.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>java</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<mainClass>edu.berkeley.cspace.piction.PictionBridge</mainClass>
+					<systemProperties>
+						<systemProperty>
+							<key>log4j.configurationFile</key>
+							<value>${project.build.directory}/conf/log4j2.xml</value>
+						</systemProperty>
+						<systemProperty>
+							<key>pictionBridge.configurationFile</key>
+							<value>${project.build.directory}/conf/local-bampfa-dev-test.xml</value>
+						</systemProperty>
+						<systemProperty>
+							<key>pictionBridge.home</key>
+							<value>${project.build.directory}</value>
+						</systemProperty>
+						<systemProperty>
+							<key>pictionBridge.user</key>
+							<value>${env.PICTION_DB_USER}</value>
+						</systemProperty>
+						<systemProperty>
+							<key>pictionBridge.password</key>
+							<value>${env.PICTION_DB_PW}</value>
+						</systemProperty>
+					</systemProperties>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

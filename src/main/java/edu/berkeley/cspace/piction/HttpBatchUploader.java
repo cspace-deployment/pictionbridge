@@ -69,6 +69,8 @@ public class HttpBatchUploader implements BatchUploader {
 
 		CloseableHttpResponse response = null;
 		
+		logger.info("submitting " + updates.size() + " updates to BMU");
+		
 		try {
 			response = client.execute(httpPost);
 		}
@@ -84,7 +86,7 @@ public class HttpBatchUploader implements BatchUploader {
 		if (responseEntity != null) {
 			try {
 				responseContent = EntityUtils.toString(responseEntity, charset);
-				logger.info("received response\n" + responseContent);
+				logger.info("received response from BMU\n" + responseContent);
 			}
 			catch (IOException e) {
 				logger.warn("error getting http response string", e);
@@ -99,6 +101,8 @@ public class HttpBatchUploader implements BatchUploader {
 		}
 		
 		if (statusCode < 200 || statusCode > 299) {
+			logger.fatal("BMU submission failed with HTTP status " + statusCode);
+			
 			throw new UploadException(response.getStatusLine().getReasonPhrase());
 		}
 	}

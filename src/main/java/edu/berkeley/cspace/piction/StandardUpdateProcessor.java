@@ -32,8 +32,7 @@ public class StandardUpdateProcessor implements UpdateProcessor {
 		for (PictionUpdate update : updates) {
 			count++;
 			
-			logger.info("processing update " + count + "/" + updates.size() + " (" + totalCount + " updates found" + (limit == null ? "" : ", limited to " + limit) + ")");
-			logger.info("\n" + update.toString());
+			logger.info("processing update " + count + "/" + updates.size() + " (" + totalCount + " updates found" + (limit == null ? "" : ", limited to " + limit) + ")\n" + update.toString());
 			
 			if (update.getAction() == UpdateAction.NEW) {
 				uploads.add(update);

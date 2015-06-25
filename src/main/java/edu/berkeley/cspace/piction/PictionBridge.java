@@ -18,12 +18,15 @@ public class PictionBridge {
 		}
 				
 		try (FileSystemXmlApplicationContext context = new FileSystemXmlApplicationContext("file:" + configFile)) {
-			logger.info("starting with configuration file " + configFile);
+			logger.info("starting up with configuration file " + configFile);
 			
 			UpdateProcessor updateProcessor = context.getBean("updateProcessor", UpdateProcessor.class);
 			int count = updateProcessor.processUpdates();
 			
 			logger.info(count + " updates processed");
+		}
+		catch(Exception e) {
+			logger.fatal("terminated with exception", e);
 		}
 	}
 }

@@ -158,7 +158,7 @@
 						</systemProperty>
 						<systemProperty>
 							<key>pictionBridge.configurationFile</key>
-							<value>${project.build.directory}/conf/${env.PICTION_CONF}.xml</value>
+							<value>${project.build.directory}/conf/${env.PICTION_BRIDGE_CONF}.xml</value>
 						</systemProperty>
 						<systemProperty>
 							<key>pictionBridge.home</key>

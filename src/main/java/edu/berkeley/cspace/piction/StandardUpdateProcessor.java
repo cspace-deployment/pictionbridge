@@ -12,26 +12,27 @@ public class StandardUpdateProcessor implements UpdateProcessor {
 	private UpdateMonitor updateMonitor;
 	private BatchUploader batchUploader;
 	
-	private Integer updateCountLimit;
+	private Integer updateLimit;
 	private int uploadBatchSize = 100;
+	private boolean deleteProcessedUpdates = true;
 	
 	public StandardUpdateProcessor() {
 		
 	}
 	
 	public int processUpdates() {
-		Integer countLimit = getUpdateCountLimit();
+		Integer limit = getUpdateLimit();
 		int uploadBatchSize = getUploadBatchSize();
-		int totalCount = updateMonitor.getUpdateCount();
+		int totalCount = getUpdateMonitor().getUpdateCount();
 		int count = 0;
 		
-		List<PictionUpdate> updates = updateMonitor.getUpdates(countLimit);
+		List<PictionUpdate> updates = getUpdateMonitor().getUpdates(limit);
 		List<PictionUpdate> uploads = new ArrayList<PictionUpdate>(uploadBatchSize);
 		
 		for (PictionUpdate update : updates) {
 			count++;
 			
-			logger.info("processing update " + count + "/" + updates.size() + " (" + totalCount + " updates found" + (countLimit == null ? "" : ", limited to " + countLimit) + ")");
+			logger.info("processing update " + count + "/" + updates.size() + " (" + totalCount + " updates found" + (limit == null ? "" : ", limited to " + limit) + ")");
 			logger.info("\n" + update.toString());
 			
 			if (update.getAction() == UpdateAction.NEW) {
@@ -49,17 +50,29 @@ public class StandardUpdateProcessor implements UpdateProcessor {
 			}
 		}
 		
-		sendUploads(uploads);
+		
+		if (uploads.size() > 0) {
+			sendUploads(uploads);
+		}
 		
 		return count;
 	}
 	
 	private void sendUploads(List<PictionUpdate> updates) {
 		try {
-			batchUploader.send(updates);
+			getBatchUploader().send(updates);
 		}
 		catch(UploadException e) {
 			logger.error("error sending batch", e);
+			return;
+		}
+		
+		// The upload was successfully submitted.
+		
+		if (getDeleteProcessedUpdates()) {
+			for (PictionUpdate update : updates) {
+				getUpdateMonitor().deleteUpdate(update);
+			}
 		}
 	}
 	
@@ -88,11 +101,19 @@ public class StandardUpdateProcessor implements UpdateProcessor {
 	}
 
 
-	public Integer getUpdateCountLimit() {
-		return updateCountLimit;
+	public Integer getUpdateLimit() {
+		return updateLimit;
 	}
 
-	public void setUpdateCountLimit(Integer updateCountLimit) {
-		this.updateCountLimit = updateCountLimit;
+	public void setUpdateLimit(Integer updateLimit) {
+		this.updateLimit = updateLimit;
+	}
+
+	public boolean getDeleteProcessedUpdates() {
+		return deleteProcessedUpdates;
+	}
+
+	public void setDeleteProcessedUpdates(boolean deleteProcessedUpdates) {
+		this.deleteProcessedUpdates = deleteProcessedUpdates;
 	}
 }

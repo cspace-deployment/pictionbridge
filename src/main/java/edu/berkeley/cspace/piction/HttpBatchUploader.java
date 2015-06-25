@@ -19,8 +19,8 @@ import org.apache.logging.log4j.Logger;
 
 public class HttpBatchUploader implements BatchUploader {
 	private static final Logger logger = LogManager.getLogger(HttpBatchUploader.class);
-	private CloseableHttpClient client;
 	
+	private CloseableHttpClient client;
 	private String uploadUrl;
 	private String fileFieldName = "imagefiles";
 	private Map<String, String> textFields = new HashMap<String, String>();
@@ -84,7 +84,7 @@ public class HttpBatchUploader implements BatchUploader {
 		if (responseEntity != null) {
 			try {
 				responseContent = EntityUtils.toString(responseEntity, charset);
-				logger.debug(responseContent);
+				logger.info("received response\n" + responseContent);
 			}
 			catch (IOException e) {
 				logger.warn("error getting http response string", e);

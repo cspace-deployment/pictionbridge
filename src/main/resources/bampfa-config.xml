@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="updateProcessor" class="edu.berkeley.cspace.piction.StandardUpdateProcessor">
+		<property name="updateMonitor" ref="databaseUpdateMonitor"/>
+		<property name="batchUploader" ref="httpBatchUploader"/>
+		
+		<!-- The maximum number of updates that may be processed in a single invocation. -->
+		<!-- Comment this out to process all available updates. -->
+		<property name="updateLimit" value="1"/>
+		
+		<!-- The number of updates to send in a single batch to the BMU. -->
+		<!-- Multiple batches may be submitted until the available updates are exhausted. -->
+		<!-- Default=100 -->
+		<property name="uploadBatchSize" value="10"/>
+		
+		<!-- Set whether or not updates should be deleted from the monitor queue after they have been -->
+		<!-- processed. If false, the updates will be processed again on the next invocation, so typically -->
+		<!-- this should only be set to false for testing. -->
+		<!-- Default=true -->
+		<property name="deleteProcessedUpdates" value="false"/>
+	</bean>
+	
+	<bean id="databaseUpdateMonitor" class="edu.berkeley.cspace.piction.DatabaseUpdateMonitor">
+		<!-- The path to a directory where files that need be created will be stored. -->
+		<!-- Extracted binaries will be stored in a subdirectory inside of this directory. -->
+		<property name="workPath" value="/tmp/piction-bridge"/>
+
+		<!-- The name of the table into which Piction sends its updates. -->
+		<property name="interfaceTable" value="piction.piction_interface"/>
+
+		<property name="dataSource">
+			<bean class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+				<property name="driverClassName" value="org.postgresql.Driver" />
+
+				<!-- Database connection info. -->
+				<!-- Use systemEnvironment to retrieve environment variables. -->
+				<property name="url" value="jdbc:postgresql://#{ systemEnvironment['PICTION_DB_HOST'] }:#{ systemEnvironment['PICTION_DB_PORT'] }/bampfa_domain_bampfa" />
+				<property name="username" value="#{ systemEnvironment['PICTION_DB_USER'] }" />
+				<property name="password" value="#{ systemEnvironment['PICTION_DB_PW'] }" />
+			</bean>
+	    </property>
+	</bean>
+	
+	<bean id="httpBatchUploader" class="edu.berkeley.cspace.piction.HttpBatchUploader">
+		<!-- The URL of the BMU upload endpoint. -->
+		<property name="uploadUrl" value="https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload"/>
+		
+		<!-- The name of the field into which to place the files to upload. -->
+		<!-- Default=imagefiles -->
+		<property name="fileFieldName" value="imagefiles"/>
+		
+		<!-- Additional text fields to send with the upload. -->
+		<!-- These are passed straight to the BMU. The BMU determines what these fields do. -->
+		<property name="textFields">
+			<map>
+				<entry key="rightsholder" value=""/>
+				<entry key="overriderightsholder" value="always"/>
+				<entry key="contributor" value=""/>
+				<entry key="overridecontributor" value="always"/>
+				<entry key="creator" value=""/>
+				<entry key="overridecreator" value="always"/>
+				
+				<!-- Uncomment validateonly to test the upload without actually queueing a job. -->
+				<entry key="validateonly" value="on"/>
+				
+				<!-- Uncomment uploadmedia to queue the job for offline processing. -->
+				<entry key="uploadmedia" value="yes"/>
+				
+				<!-- Uncomment createmedia to process the job immediately. -->
+				<!-- <entry key="createmedia" value="yes"/> -->
+			</map>
+		</property>
+	</bean>	
+</beans>

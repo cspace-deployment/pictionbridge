@@ -17,8 +17,8 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class HttpBatchUploader implements BatchUploader {
-	private static final Logger logger = LogManager.getLogger(HttpBatchUploader.class);
+public class HttpBatchMediaUploader implements Uploader {
+	private static final Logger logger = LogManager.getLogger(HttpBatchMediaUploader.class);
 	
 	private CloseableHttpClient client;
 	private String uploadUrl;
@@ -26,7 +26,7 @@ public class HttpBatchUploader implements BatchUploader {
 	private Map<String, String> textFields = new HashMap<String, String>();
 	private String charset = "UTF-8";
 	
-	public HttpBatchUploader() {
+	public HttpBatchMediaUploader() {
 //		CredentialsProvider credsProvider = new BasicCredentialsProvider();
 //		
 //		credsProvider.setCredentials(

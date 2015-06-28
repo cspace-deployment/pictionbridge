@@ -10,7 +10,7 @@ public class StandardUpdateProcessor implements UpdateProcessor {
 	private static final Logger logger = LogManager.getLogger(StandardUpdateProcessor.class);
 
 	private UpdateMonitor updateMonitor;
-	private BatchUploader batchUploader;
+	private Uploader uploader;
 	
 	private Integer updateLimit;
 	private int uploadBatchSize = 100;
@@ -59,7 +59,7 @@ public class StandardUpdateProcessor implements UpdateProcessor {
 	
 	private void sendUploads(List<PictionUpdate> updates) {
 		try {
-			getBatchUploader().send(updates);
+			getUploader().send(updates);
 		}
 		catch(UploadException e) {
 			logger.error("error sending batch", e);
@@ -75,6 +75,10 @@ public class StandardUpdateProcessor implements UpdateProcessor {
 		}
 	}
 	
+	public void close() {
+		getUploader().close();
+	}
+	
 	public UpdateMonitor getUpdateMonitor() {
 		return updateMonitor;
 	}
@@ -83,12 +87,12 @@ public class StandardUpdateProcessor implements UpdateProcessor {
 		this.updateMonitor = updateMonitor;
 	}
 
-	public BatchUploader getBatchUploader() {
-		return batchUploader;
+	public Uploader getUploader() {
+		return uploader;
 	}
 
-	public void setBatchUploader(BatchUploader batchUploader) {
-		this.batchUploader = batchUploader;
+	public void setUploader(Uploader uploader) {
+		this.uploader = uploader;
 	}
 
 	public int getUploadBatchSize() {

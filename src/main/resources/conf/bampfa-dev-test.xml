@@ -6,13 +6,13 @@
 
 	<bean id="updateProcessor" class="edu.berkeley.cspace.piction.StandardUpdateProcessor">
 		<property name="updateMonitor" ref="databaseUpdateMonitor"/>
-		<property name="batchUploader" ref="httpBatchUploader"/>
+		<property name="uploader" ref="httpBatchMediaUploader"/>
 		
 		<!-- The maximum number of updates that may be processed in a single invocation. -->
 		<!-- Comment this out to process all available updates. -->
 		<property name="updateLimit" value="5"/>
 		
-		<!-- The number of updates to send in a single batch to the BMU. -->
+		<!-- The number of updates to send in a single batch to the uploader. -->
 		<!-- Multiple batches may be submitted until the available updates are exhausted. -->
 		<!-- Default=100 -->
 		<property name="uploadBatchSize" value="10"/>
@@ -45,7 +45,7 @@
 	    </property>
 	</bean>
 	
-	<bean id="httpBatchUploader" class="edu.berkeley.cspace.piction.HttpBatchUploader">
+	<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.piction.HttpBatchMediaUploader">
 		<!-- The URL of the BMU upload endpoint. -->
 		<property name="uploadUrl" value="https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload"/>
 		

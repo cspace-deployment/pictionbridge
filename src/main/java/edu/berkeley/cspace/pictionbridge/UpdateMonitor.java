@@ -5,7 +5,7 @@ import java.util.List;
 public interface UpdateMonitor {
 	public boolean hasUpdates();
 	public int getUpdateCount();
-	public List<PictionUpdate> getUpdates();
-	public List<PictionUpdate> getUpdates(Integer limit);
-	public void deleteUpdate(PictionUpdate update);
+	public List<Update> getUpdates();
+	public List<Update> getUpdates(Integer limit);
+	public void deleteUpdate(Update update);
 }

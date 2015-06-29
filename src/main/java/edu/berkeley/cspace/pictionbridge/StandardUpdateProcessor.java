@@ -26,10 +26,10 @@ public class StandardUpdateProcessor implements UpdateProcessor {
 		int totalCount = getUpdateMonitor().getUpdateCount();
 		int count = 0;
 		
-		List<PictionUpdate> updates = getUpdateMonitor().getUpdates(limit);
-		List<PictionUpdate> uploads = new ArrayList<PictionUpdate>(uploadBatchSize);
+		List<Update> updates = getUpdateMonitor().getUpdates(limit);
+		List<Update> uploads = new ArrayList<Update>(uploadBatchSize);
 		
-		for (PictionUpdate update : updates) {
+		for (Update update : updates) {
 			count++;
 			
 			logger.info("processing update " + count + "/" + updates.size() + " (" + totalCount + " updates found" + (limit == null ? "" : ", limited to " + limit) + ")\n" + update.toString());
@@ -57,7 +57,7 @@ public class StandardUpdateProcessor implements UpdateProcessor {
 		return count;
 	}
 	
-	private void sendUploads(List<PictionUpdate> updates) {
+	private void sendUploads(List<Update> updates) {
 		try {
 			getUploader().send(updates);
 		}
@@ -69,7 +69,7 @@ public class StandardUpdateProcessor implements UpdateProcessor {
 		// The upload was successfully submitted.
 		
 		if (getDeleteProcessedUpdates()) {
-			for (PictionUpdate update : updates) {
+			for (Update update : updates) {
 				getUpdateMonitor().deleteUpdate(update);
 			}
 		}

@@ -44,13 +44,13 @@ public class CollectionSpaceRestUploader implements Uploader {
 	}
 	
 	@Override
-	public void send(List<PictionUpdate> updates) throws UploadException {		
-		for (PictionUpdate update : updates) {
+	public void send(List<Update> updates) throws UploadException {		
+		for (Update update : updates) {
 			send(update);
 		}
 	}
 
-	private void send(PictionUpdate update) throws UploadException {
+	private void send(Update update) throws UploadException {
 		if (update.getAction() == UpdateAction.NEW) {
 			doNew(update);
 		}
@@ -59,7 +59,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		}		
 	}
 	
-	private void doNew(PictionUpdate update) throws UploadException {
+	private void doNew(Update update) throws UploadException {
 		// TEST!!!
 		update.setObjectCsid("5dfbcb91-f924-43ca-905a");
 		
@@ -172,7 +172,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		return uriString.substring(index);
 	}
 
-	private Integer getImageNumber(PictionUpdate update) {
+	private Integer getImageNumber(Update update) {
 		Integer imageNumber = null;
 
 		if (update.getRelationship() == UpdateRelationship.PRIMARY) {

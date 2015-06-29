@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-	<bean id="updateProcessor" class="edu.berkeley.cspace.piction.StandardUpdateProcessor">
+	<bean id="updateProcessor" class="edu.berkeley.cspace.pictionbridge.StandardUpdateProcessor">
 		<property name="updateMonitor" ref="databaseUpdateMonitor"/>
 		<property name="uploader" ref="cspaceRestUploader"/>
 		
@@ -24,7 +24,7 @@
 		<property name="deleteProcessedUpdates" value="false"/>
 	</bean>
 	
-	<bean id="databaseUpdateMonitor" class="edu.berkeley.cspace.piction.DatabaseUpdateMonitor">
+	<bean id="databaseUpdateMonitor" class="edu.berkeley.cspace.pictionbridge.DatabaseUpdateMonitor">
 		<!-- The path to a directory where files that need be created will be stored. -->
 		<!-- Extracted binaries will be stored in a subdirectory inside of this directory. -->
 		<property name="workPath" value="#{ systemProperties['pictionBridge.home'] }/work"/>
@@ -46,7 +46,7 @@
 	    </property>
 	</bean>
 	
-	<bean id="cspaceRestUploader" class="edu.berkeley.cspace.piction.CollectionSpaceRestUploader">
+	<bean id="cspaceRestUploader" class="edu.berkeley.cspace.pictionbridge.CollectionSpaceRestUploader">
 		<property name="credentials">
 			<bean class="org.apache.http.auth.UsernamePasswordCredentials">
 				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_USER'] }" />
@@ -60,7 +60,7 @@
 		<property name="readCollectionObjectUrl" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/collectionobjects/{csid}"/>
 	</bean>
 	
-	<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.piction.HttpBatchMediaUploader">
+	<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.pictionbridge.HttpBatchMediaUploader">
 		<!-- The URL of the BMU upload endpoint. -->
 		<property name="uploadUrl" value="https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload"/>
 		

@@ -4,7 +4,7 @@ import java.io.File;
 import java.sql.Timestamp;
 import java.util.Objects;
 
-public class PictionUpdate {
+public class Update {
 	private long id;
 	private int pictionId;
 	private String filename;

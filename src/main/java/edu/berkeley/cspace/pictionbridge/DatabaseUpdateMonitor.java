@@ -54,11 +54,11 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		return this.jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + getInterfaceTable(), Integer.class);
 	}
 
-	public List<PictionUpdate> getUpdates() {
+	public List<Update> getUpdates() {
 		return getUpdates(null);
 	}
 	
-	public List<PictionUpdate> getUpdates(Integer limit) {
+	public List<Update> getUpdates(Integer limit) {
 		String sql = "SELECT id, piction_id, filename, mimetype, img_size, img_height, img_width, object_csid, media_csid, blob_csid, action, relationship, dt_addedtopiction, dt_uploaded, bimage FROM " + getInterfaceTable() + " ORDER BY dt_uploaded";
 		
 		if (limit != null) {
@@ -67,11 +67,11 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		
 		logger.debug("executing query: " + sql);
 		
-		List<PictionUpdate> updates = this.jdbcTemplate.query(
+		List<Update> updates = this.jdbcTemplate.query(
 			sql,
-			new RowMapper<PictionUpdate>() {
-				public PictionUpdate mapRow(ResultSet results, int rowNum) throws SQLException {					
-					PictionUpdate update = new PictionUpdate();
+			new RowMapper<Update>() {
+				public Update mapRow(ResultSet results, int rowNum) throws SQLException {					
+					Update update = new Update();
 					
 					update.setId(results.getLong(1));
 					update.setPictionId(results.getInt(2));
@@ -122,7 +122,7 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		return updates;
 	}
 	
-	public void deleteUpdate(PictionUpdate update) {
+	public void deleteUpdate(Update update) {
 		logger.debug("deleting update " + update.getId());
 
 		int rowsAffected = this.jdbcTemplate.update("DELETE FROM " + getInterfaceTable() + " WHERE id = ?", Long.valueOf(update.getId()));
@@ -132,15 +132,15 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		}
 	}
 
-	private String getBinaryFilename(PictionUpdate update) {
+	private String getBinaryFilename(Update update) {
 		return update.getFilename();
 	}
 	
-	private Path getUpdateWorkDir(PictionUpdate update) {
+	private Path getUpdateWorkDir(Update update) {
 		return FileSystems.getDefault().getPath(getWorkPath(), BINARY_DIR, Long.toString(update.getId())).toAbsolutePath();
 	}
 	
-	private File extractBinary(InputStream in, PictionUpdate update) {
+	private File extractBinary(InputStream in, Update update) {
 		Path dir = getUpdateWorkDir(update);
 		
 		try {

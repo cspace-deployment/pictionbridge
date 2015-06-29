@@ -165,7 +165,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<mainClass>edu.berkeley.cspace.piction.PictionBridge</mainClass>
+					<mainClass>edu.berkeley.cspace.pictionbridge.PictionBridge</mainClass>
 					<systemProperties>
 						<systemProperty>
 							<key>log4j.configurationFile</key>

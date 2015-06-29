@@ -40,7 +40,7 @@ public class HttpBatchMediaUploader implements Uploader {
 	}
 	
 	@Override
-	public void send(List<PictionUpdate> updates) throws UploadException {
+	public void send(List<Update> updates) throws UploadException {
 		HttpPost httpPost = new HttpPost(getUploadUrl());
 		MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
 		
@@ -54,7 +54,7 @@ public class HttpBatchMediaUploader implements Uploader {
 			entityBuilder.addTextBody(key, value, textContentType);
 		}
 		
-		for (PictionUpdate update : updates) {
+		for (Update update : updates) {
 			entityBuilder.addBinaryBody(getFileFieldName(), update.getBinaryFile(), ContentType.parse(update.getMimeType()), update.getFilename());
 		}
 				

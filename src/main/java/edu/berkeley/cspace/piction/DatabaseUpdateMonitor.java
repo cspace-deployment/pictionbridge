@@ -13,6 +13,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,7 +23,6 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 	private static final Logger logger = LogManager.getLogger(DatabaseUpdateMonitor.class);
 	
 	private static final String BINARY_DIR = "binaries";
-	private static final int BUFFER_SIZE = 4096;
 	
 	private String workPath;
 	private String interfaceTable;
@@ -121,12 +121,25 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 	}
 
 	private String getBinaryFilename(PictionUpdate update) {
-		return Long.toString(update.getId());
+		return update.getFilename();
+	}
+	
+	private Path getUpdateWorkDir(PictionUpdate update) {
+		return FileSystems.getDefault().getPath(getWorkPath(), BINARY_DIR, Long.toString(update.getId())).toAbsolutePath();
 	}
 	
 	private File extractBinary(InputStream in, PictionUpdate update) {
-		File file = FileSystems.getDefault().getPath(getWorkPath(), BINARY_DIR, getBinaryFilename(update)).toFile();
-		int bytesRead = 0;
+		Path dir = getUpdateWorkDir(update);
+		
+		try {
+			Files.createDirectories(dir);
+		} catch (IOException e) {
+			logger.fatal("failed to create work directory " + dir, e);
+			
+			throw(new UpdateMonitorException(e));
+		}
+	
+		File file = new File(dir.toFile(), getBinaryFilename(update));
 		
 		logger.debug("extracting binary for update " + update.getId() + " to " + file.getPath());
 		
@@ -140,19 +153,13 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 			
 			FileOutputStream out = new FileOutputStream(file);
 			
-			byte[] buffer = new byte[BUFFER_SIZE];
-			int length = 0;
-	
-			while ((length = in.read(buffer)) != -1) {
-				bytesRead += length;
-				out.write(buffer, 0, length);
-			}
-	
+			int bytesCopied = IOUtils.copy(in, out);
+				
 			in.close();
 			out.close();
 			
-			if (update.getImgSize() != bytesRead) {
-				logger.warn("binary for update " + update.getId() + " has incorrect size: expected " + update.getImgSize() + ", found " + bytesRead);
+			if (update.getImgSize() != bytesCopied) {
+				logger.warn("binary for update " + update.getId() + " has incorrect size: expected " + update.getImgSize() + ", found " + bytesCopied);
 			}
 		}
 		catch(IOException e) {

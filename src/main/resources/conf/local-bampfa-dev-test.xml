@@ -6,11 +6,11 @@
 
 	<bean id="updateProcessor" class="edu.berkeley.cspace.piction.StandardUpdateProcessor">
 		<property name="updateMonitor" ref="databaseUpdateMonitor"/>
-		<property name="uploader" ref="httpBatchMediaUploader"/>
+		<property name="uploader" ref="cspaceRestUploader"/>
 		
 		<!-- The maximum number of updates that may be processed in a single invocation. -->
 		<!-- Comment this out to process all available updates. -->
-		<property name="updateLimit" value="5"/>
+		<property name="updateLimit" value="1"/>
 		
 		<!-- The number of updates to send in a single batch to the uploader. -->
 		<!-- Multiple batches may be submitted until the available updates are exhausted. -->
@@ -44,6 +44,17 @@
 				<property name="password" value="#{ systemEnvironment['PICTION_BRIDGE_DB_PW'] }" />
 			</bean>
 	    </property>
+	</bean>
+	
+	<bean id="cspaceRestUploader" class="edu.berkeley.cspace.piction.CollectionSpaceRestUploader">
+		<property name="credentials">
+			<bean class="org.apache.http.auth.UsernamePasswordCredentials">
+				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_USER'] }" />
+				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_PW'] }" />
+			</bean>
+		</property>
+
+		<property name="createBlobUrl" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/blobs"/>
 	</bean>
 	
 	<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.piction.HttpBatchMediaUploader">

@@ -39,6 +39,7 @@ public class HttpBatchMediaUploader implements Uploader {
 		client = HttpClients.createDefault();		
 	}
 	
+	@Override
 	public void close() {
 		try {
 			client.close();
@@ -47,6 +48,7 @@ public class HttpBatchMediaUploader implements Uploader {
 		}
 	}
 	
+	@Override
 	public void send(List<PictionUpdate> updates) throws UploadException {
 		HttpPost httpPost = new HttpPost(getUploadUrl());
 		MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();

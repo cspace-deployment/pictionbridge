@@ -1,4 +1,4 @@
-package edu.berkeley.cspace.piction;
+package edu.berkeley.cspace.pictionbridge;
 
 public enum UpdateRelationship {
 	PRIMARY,

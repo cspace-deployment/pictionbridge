@@ -1,4 +1,4 @@
-package edu.berkeley.cspace.piction;
+package edu.berkeley.cspace.pictionbridge;
 
 public class UploadException extends Exception {
 	private static final long serialVersionUID = 1L;

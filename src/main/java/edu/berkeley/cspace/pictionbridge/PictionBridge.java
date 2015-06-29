@@ -1,4 +1,4 @@
-package edu.berkeley.cspace.piction;
+package edu.berkeley.cspace.pictionbridge;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

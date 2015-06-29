@@ -27,15 +27,17 @@ import edu.berkeley.cspace.jaxb.Relation;
 public class CollectionSpaceRestUploader implements Uploader {
 	private static final Logger logger = LogManager.getLogger(CollectionSpaceRestUploader.class);
 
+	public static final String BLOB_SERVICE_NAME = "blobs";
+	public static final String MEDIA_SERVICE_NAME = "media";
+	public static final String RELATION_SERVICE_NAME = "relations";
+	public static final String COLLECTION_OBJECT_SERVICE_NAME = "collectionobjects";
+
 	private RestTemplate restTemplate;
 	private Credentials credentials;
-
-	private String createBlobUrl;
-	private String createMediaUrl;
-	private String createRelationUrl;
-	private String readCollectionObjectUrl;
-	
+	private String servicesUrl;
+		
 	public CollectionSpaceRestUploader() {
+		
 	}
 	
 	@Override
@@ -51,12 +53,19 @@ public class CollectionSpaceRestUploader implements Uploader {
 	}
 
 	private void send(Update update) throws UploadException {
-		if (update.getAction() == UpdateAction.NEW) {
-			doNew(update);
+		switch(update.getAction()) {
+			case NEW:
+				doNew(update);
+				break;
+			case UPDATE:
+				doUpdate(update);
+				break;
+			case DELETE:
+				doDelete(update);
+				break;
+			default:
+				logger.warn("skipping unhandled action " + update.getAction() + " for update " + update.getId());		
 		}
-		else {
-			logger.warn("skipping unhandled action " + update.getAction() + " for update " + update.getId());
-		}		
 	}
 	
 	private void doNew(Update update) throws UploadException {
@@ -64,7 +73,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		update.setObjectCsid("5dfbcb91-f924-43ca-905a");
 		
 		if (update.getObjectCsid() == null) {
-			logger.warn("skipping update " + update.getId() + " with null objectcsid");
+			logger.warn("skipping " + update.getAction() + " " + update.getId() + " with null object csid");
 			return;
 		}
 
@@ -75,7 +84,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 			return;			
 		}
 		
-		logger.debug("found collection object: " + collectionObject.toString());
+		logger.debug("found collection object for csid " + update.getObjectCsid() + ": " + collectionObject.toString());
 
 		String blobCsid = createBlob(update.getFilename(), update.getBinaryFile());
 		String mediaCsid = createMedia(update.getFilename(), getImageNumber(update), blobCsid);
@@ -88,11 +97,47 @@ public class CollectionSpaceRestUploader implements Uploader {
 		media.core.uri = "/media/" + mediaCsid;
 		media.core.refName = "urn:cspace:bampfa.cspace.berkeley.edu:media:id(" + mediaCsid + ")";
 		
-		List<String> relationCsids = createRelations(collectionObject, media);	
+		createRelations(collectionObject, media);	
+	}
+	
+	private void doUpdate(Update update) throws UploadException {
+		// TEST!!!
+		update.setMediaCsid("5b7aac25-bc30-4e33-91ef");
 
-		logger.info("created blob with csid " + blobCsid);
-		logger.info("created media with csid " + mediaCsid);
-		logger.info("created relations with csids " + StringUtils.join(relationCsids, ", "));
+		// Blobs currently can't have their binary updated (CSPACE-6633).
+		// Instead, create a new blob, set the media blobCsid to point
+		// to the new blob, and then delete the old blob.
+		
+		if (update.getMediaCsid() == null) {
+			logger.warn("skipping " + update.getAction() + " " + update.getId() + " with null media csid");
+			return;
+		}
+
+		Media media = readMedia(update.getMediaCsid());
+
+		if (media == null) {
+			logger.error("could not find media for update " + update.getId() + " with csid " + update.getObjectCsid());
+			return;			
+		}
+		
+		String oldBlobCsid = media.common.blobCsid;
+		String newBlobCsid = createBlob(update.getFilename(), update.getBinaryFile());
+
+		// Create a sparse media update.
+		
+		Media newMedia = new Media();
+		newMedia.csid = update.getMediaCsid();
+		newMedia.common.blobCsid = newBlobCsid;
+		
+		updateMedia(newMedia);
+		
+		// Delete the previous blob.
+		
+		deleteBlob(oldBlobCsid);
+	}
+	
+	private void doDelete(Update update) throws UploadException {
+		
 	}
 	
 	private String createBlob(String filename, File binaryFile) throws UploadException {
@@ -101,23 +146,64 @@ public class CollectionSpaceRestUploader implements Uploader {
 		MultiValueMap<String, Object> form = new LinkedMultiValueMap<String, Object>();
 		form.add("file", new FileSystemResource(binaryFile));
 		
-		URI location = this.restTemplate.postForLocation(getCreateBlobUrl(), form);
+		URI location = this.restTemplate.postForLocation(getServicesUrl(), form, BLOB_SERVICE_NAME, null);
+		String csid = uriToCsid(location);
 		
-		return uriToCsid(location);
+		logger.info("created blob with csid " + csid);
+
+		return csid;
 	}
-		
+	
+	private void deleteBlob(String csid) throws UploadException {
+		logger.info("deleting blob with csid " + csid);
+
+		this.restTemplate.delete(getServicesUrl(), BLOB_SERVICE_NAME, csid);		
+	}
+	
 	private String createMedia(String title, Integer imageNumber, String blobCsid) throws UploadException {
+		logger.debug("creating media with title " + title);
+		
 		Media media = new Media();
 		media.common.title = title;
 		media.common.blobCsid = blobCsid;
 		media.bampfa.imageNumber = imageNumber;
 	
-		URI location = this.restTemplate.postForLocation(getCreateMediaUrl(), media);
+		URI location = this.restTemplate.postForLocation(getServicesUrl(), media, MEDIA_SERVICE_NAME, null);
+		String csid = uriToCsid(location);
+		
+		logger.info("created media with csid " + csid);
 
-		return uriToCsid(location);
+		return csid;
+	}
+	
+	private Media readMedia(String csid) {
+		Media media = null;
+		
+		try {
+			media = this.restTemplate.getForObject(getServicesUrl(), Media.class, MEDIA_SERVICE_NAME, csid);
+			media.csid = csid;
+		}
+		catch(HttpClientErrorException e) {
+			logger.error("could not read media with csid " + csid, e);
+		}
+		
+		return media;
+	}
+	
+	private void updateMedia(Media media) {
+		logger.info("updating media with csid " + media.csid);
+
+		try {
+			this.restTemplate.put(getServicesUrl(), media, MEDIA_SERVICE_NAME, media.csid);
+		}
+		catch(HttpClientErrorException e) {
+			logger.error("could not update media with csid " + media.csid, e);
+		}
 	}
 	
 	private List<String> createRelations(CollectionObject collectionObject, Media media) {
+		logger.debug("creating relations between collectionobject " + collectionObject.csid + " and media " + media.csid);
+
 		List<String> csids = new ArrayList<String>();
 		
 		Relation relation = new Relation();
@@ -131,8 +217,11 @@ public class CollectionSpaceRestUploader implements Uploader {
 		relation.common.objectRefName = media.core.refName;		
 		relation.common.objectUri = media.core.uri;
 		
-		URI location = this.restTemplate.postForLocation(getCreateRelationUrl(), relation);
-		csids.add(uriToCsid(location));
+		URI location = this.restTemplate.postForLocation(getServicesUrl(), relation, RELATION_SERVICE_NAME, null);
+		String csid = uriToCsid(location);
+		csids.add(csid);
+		
+		logger.info("created relation with csid " + csid);
 
 		Relation backRelation = new Relation();
 		backRelation.common.relationshipType = "affects";
@@ -145,8 +234,11 @@ public class CollectionSpaceRestUploader implements Uploader {
 		backRelation.common.objectRefName = collectionObject.core.refName;		
 		backRelation.common.objectUri = collectionObject.core.uri;
 		
-		URI backLocation = this.restTemplate.postForLocation(getCreateRelationUrl(), backRelation);
-		csids.add(uriToCsid(backLocation));
+		URI backLocation = this.restTemplate.postForLocation(getServicesUrl(), backRelation, RELATION_SERVICE_NAME, null);
+		String backCsid = uriToCsid(backLocation); 
+		csids.add(backCsid);
+		
+		logger.info("created relation with csid " + csid);
 		
 		return csids;
 	}
@@ -155,7 +247,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		CollectionObject collectionObject = null;
 		
 		try {
-			collectionObject = this.restTemplate.getForObject(getReadCollectionObjectUrl(), CollectionObject.class, csid);
+			collectionObject = this.restTemplate.getForObject(getServicesUrl(), CollectionObject.class, COLLECTION_OBJECT_SERVICE_NAME, csid);
 			collectionObject.csid = csid;
 		}
 		catch(HttpClientErrorException e) {
@@ -164,7 +256,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		
 		return collectionObject;
 	}
-	
+
 	private String uriToCsid(URI uri) {
 		String uriString = uri.toString();
 		int index = uriString.lastIndexOf('/') + 1;
@@ -198,35 +290,11 @@ public class CollectionSpaceRestUploader implements Uploader {
 		restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
 	}
 
-	public String getCreateBlobUrl() {
-		return createBlobUrl;
+	public String getServicesUrl() {
+		return servicesUrl;
 	}
 
-	public void setCreateBlobUrl(String createBlobUrl) {
-		this.createBlobUrl = createBlobUrl;
-	}
-
-	public String getCreateMediaUrl() {
-		return createMediaUrl;
-	}
-
-	public void setCreateMediaUrl(String createMediaUrl) {
-		this.createMediaUrl = createMediaUrl;
-	}
-
-	public String getCreateRelationUrl() {
-		return createRelationUrl;
-	}
-
-	public void setCreateRelationUrl(String createRelationUrl) {
-		this.createRelationUrl = createRelationUrl;
-	}
-
-	public String getReadCollectionObjectUrl() {
-		return readCollectionObjectUrl;
-	}
-
-	public void setReadCollectionObjectUrl(String readCollectionObjectUrl) {
-		this.readCollectionObjectUrl = readCollectionObjectUrl;
+	public void setServicesUrl(String servicesUrl) {
+		this.servicesUrl = servicesUrl;
 	}
 }

@@ -55,6 +55,9 @@
 		</property>
 
 		<property name="createBlobUrl" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/blobs"/>
+		<property name="createMediaUrl" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/media"/>
+		<property name="createRelationUrl" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/relations"/>
+		<property name="readCollectionObjectUrl" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/collectionobjects/{csid}"/>
 	</bean>
 	
 	<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.piction.HttpBatchMediaUploader">

@@ -95,7 +95,19 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 					}
 
 					update.setAction(action);
-					update.setRelationship(results.getString(12));
+					
+					String relationshipString = results.getString(12);
+					UpdateRelationship relationship = null;
+					
+					try {
+						relationship = UpdateRelationship.valueOf(relationshipString);
+					}
+					catch(IllegalArgumentException e) {
+						logger.warn("update " + update.getId() + " has unknown relationship " + relationshipString);
+					}
+					
+					update.setRelationship(relationship);
+					
 					update.setDateTimeAddedToPiction(results.getTimestamp(13));
 					update.setDateTimeUploaded(results.getTimestamp(14));
 					update.setBinaryFile(extractBinary(results.getBinaryStream(15), update));

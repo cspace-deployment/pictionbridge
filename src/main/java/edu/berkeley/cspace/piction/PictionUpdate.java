@@ -16,7 +16,7 @@ public class PictionUpdate {
 	private String mediaCsid;
 	private String blobCsid;
 	private UpdateAction action;
-	private String relationship;
+	private UpdateRelationship relationship;
 	private Timestamp dateTimeAddedToPiction;
 	private Timestamp dateTimeUploaded;
 	private File binaryFile;
@@ -109,11 +109,11 @@ public class PictionUpdate {
 		this.action = action;
 	}
 	
-	public String getRelationship() {
+	public UpdateRelationship getRelationship() {
 		return relationship;
 	}
 	
-	public void setRelationship(String relationship) {
+	public void setRelationship(UpdateRelationship relationship) {
 		this.relationship = relationship;
 	}
 	

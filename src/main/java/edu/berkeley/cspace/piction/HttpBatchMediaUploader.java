@@ -27,16 +27,7 @@ public class HttpBatchMediaUploader implements Uploader {
 	private String charset = "UTF-8";
 	
 	public HttpBatchMediaUploader() {
-//		CredentialsProvider credsProvider = new BasicCredentialsProvider();
-//		
-//		credsProvider.setCredentials(
-//				new AuthScope(CSPACE_HOST, AuthScope.ANY_PORT, AUTH_REALM, "basic"),
-//				new UsernamePasswordCredentials(username, new String(password)));
-		
-//		mClientContext = HttpClientContext.create();
-//		mClientContext.setCredentialsProvider(credsProvider);
-
-		client = HttpClients.createDefault();		
+		client = HttpClients.createDefault();
 	}
 	
 	@Override

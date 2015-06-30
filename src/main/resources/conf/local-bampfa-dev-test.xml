@@ -54,7 +54,8 @@
 			</bean>
 		</property>
 
-		<property name="servicesUrl" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/{serviceName}/{csid}"/>
+		<property name="servicesUrlTemplate" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/{serviceName}/{csid}"/>
+		<property name="mediaRefNameTemplate" value="urn:cspace:bampfa.cspace.berkeley.edu:media:id({csid})"/>
 	</bean>
 	
 	<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.pictionbridge.HttpBatchMediaUploader">

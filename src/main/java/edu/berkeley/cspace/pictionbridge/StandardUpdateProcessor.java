@@ -61,6 +61,13 @@ public class StandardUpdateProcessor implements UpdateProcessor {
 				getUpdateMonitor().deleteUpdate(sentUpdate);
 			}
 		}
+		else {
+			if (logger.isDebugEnabled()) {
+				for (Update sentUpdate : sentUpdates) {
+					logger.debug("deletion disabled, would delete update " + sentUpdate.getId());
+				}
+			}
+		}
 
 		return sentUpdates.size();
 	}

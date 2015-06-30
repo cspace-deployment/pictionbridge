@@ -157,7 +157,7 @@ public class Update {
 		str.append("action: " + Objects.toString(this.getAction(), "") + "\n");
 		str.append("relationship: " + Objects.toString(this.getRelationship(), "") + "\n");
 		str.append("dateTimeAddedToPiction: " + Objects.toString(this.getDateTimeAddedToPiction(), "") + "\n");
-		str.append("dateTimeUploaded: " + Objects.toString(this.getDateTimeUploaded(), "") + "\n");
+		str.append("dateTimeUploaded: " + Objects.toString(this.getDateTimeUploaded(), ""));
 		
 		return str.toString();
 	}

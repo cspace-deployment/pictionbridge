@@ -23,7 +23,8 @@ public class PictionBridge {
 			UpdateProcessor updateProcessor = context.getBean("updateProcessor", UpdateProcessor.class);
 			int count = updateProcessor.processUpdates();
 			
-			logger.info(count + " updates processed");
+			logger.info("processed " + count + " updates");
+			logger.info("exiting");
 		}
 		catch(Exception e) {
 			logger.fatal("terminated with exception", e);

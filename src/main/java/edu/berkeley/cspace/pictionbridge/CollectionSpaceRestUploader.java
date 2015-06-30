@@ -5,7 +5,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.client.HttpClient;
@@ -44,49 +43,58 @@ public class CollectionSpaceRestUploader implements Uploader {
 	public CollectionSpaceRestUploader() {
 		
 	}
-	
+
+	@Override
+	public boolean supportsAction(UpdateAction action) {
+		return true;
+	}
+
 	@Override
 	public void close() {
-
+		
 	}
 	
 	@Override
-	public void send(List<Update> updates) throws UploadException {		
+	public List<Update> send(List<Update> updates) throws UploadException {
+		List<Update> sentUpdates = new ArrayList<Update>();
+		
 		for (Update update : updates) {
-			send(update);
+			if (send(update)) {
+				sentUpdates.add(update);
+			}
 		}
+		
+		return sentUpdates;
 	}
 
-	private void send(Update update) throws UploadException {
+	private boolean send(Update update) {
 		switch(update.getAction()) {
 			case NEW:
-//				doNew(update);
-//				break;
+				return doNew(update);
 			case UPDATE:
-//				doUpdate(update);
-//				break;
+				return doUpdate(update);
 			case DELETE:
-				doDelete(update);
-				break;
+				return doDelete(update);
 			default:
-				logger.warn("skipping unhandled action " + update.getAction() + " for update " + update.getId());		
+				logger.warn("skipping update " +  update.getId() + ": unhandled action " + update.getAction());
+				return false;
 		}
 	}
 	
-	private void doNew(Update update) throws UploadException {
-		// TEST!!!
-		update.setObjectCsid("5dfbcb91-f924-43ca-905a");
+	private boolean doNew(Update update) {
+		// Test...
+		// update.setObjectCsid("5dfbcb91-f924-43ca-905a");
 		
 		if (update.getObjectCsid() == null) {
-			logger.warn("skipping " + update.getAction() + " " + update.getId() + " with null object csid");
-			return;
+			logger.warn("skipping update " +  update.getId() + " (" + update.getAction() + "): object csid is null");
+			return false;
 		}
 
 		CollectionObject collectionObject = readCollectionObject(update.getObjectCsid());
 
 		if (collectionObject == null) {
-			logger.error("could not find collectionobject for update " + update.getId() + " with csid " + update.getObjectCsid());
-			return;			
+			logger.error("update " + update.getId() + " failed: could not find collection object with csid " + update.getObjectCsid());
+			return false;			
 		}
 		
 		logger.debug("found collection object for csid " + update.getObjectCsid() + ": " + collectionObject.toString());
@@ -102,27 +110,29 @@ public class CollectionSpaceRestUploader implements Uploader {
 		media.core.uri = "/" + MEDIA_SERVICE_NAME + "/" + mediaCsid;
 		media.core.refName = getMediaRefNameTemplate().expand(mediaCsid).toString();
 		
-		createRelations(collectionObject, media);	
+		createRelations(collectionObject, media);
+		
+		return true;
 	}
 	
-	private void doUpdate(Update update) throws UploadException {
-		// TEST!!!
-		update.setMediaCsid("5b7aac25-bc30-4e33-91ef");
+	private boolean doUpdate(Update update) {
+		// Test...
+		// update.setMediaCsid("5b7aac25-bc30-4e33-91ef");
 
 		// Blobs currently can't have their binary updated (CSPACE-6633).
 		// Instead, create a new blob, set the media blobCsid to point
 		// to the new blob, and then delete the old blob.
 		
 		if (update.getMediaCsid() == null) {
-			logger.warn("skipping " + update.getAction() + " " + update.getId() + " with null media csid");
-			return;
+			logger.warn("skipping update " +  update.getId() + " (" + update.getAction() + "): media csid is null");
+			return false;
 		}
 
 		Media media = readMedia(update.getMediaCsid());
 
 		if (media == null) {
-			logger.error("could not find media for update " + update.getId() + " with csid " + update.getObjectCsid());
-			return;			
+			logger.error("update " + update.getId() + " failed: could not find media with csid " + update.getMediaCsid());
+			return false;			
 		}
 		
 		String oldBlobCsid = media.common.blobCsid;
@@ -139,40 +149,39 @@ public class CollectionSpaceRestUploader implements Uploader {
 		// Delete the previous blob.
 		
 		deleteBlob(oldBlobCsid);
+		
+		return true;
 	}
 	
-	private void doDelete(Update update) throws UploadException {
-		//TEST!!!
-		update.setBlobCsid("6b9844fc-1947-4a2f-94d4");
-		update.setMediaCsid("0044de76-a89a-4688-a9e3");
-		update.setObjectCsid("5dfbcb91-f924-43ca-905a");
+	private boolean doDelete(Update update) {
+		// Test...
+		// update.setBlobCsid("6b9844fc-1947-4a2f-94d4");
+		// update.setMediaCsid("0044de76-a89a-4688-a9e3");
+		// update.setObjectCsid("5dfbcb91-f924-43ca-905a");
 		
 		if (update.getBlobCsid() == null) {
-			logger.warn("skipping " + update.getAction() + " " + update.getId() + " with null blob csid");
-			return;
+			logger.warn("skipping update " +  update.getId() + " (" + update.getAction() + "): blob csid is null");
+			return false;
 		}
 
 		if (update.getMediaCsid() == null) {
-			logger.warn("skipping " + update.getAction() + " " + update.getId() + " with null media csid");
-			return;
+			logger.warn("skipping update " +  update.getId() + " (" + update.getAction() + "): media csid is null");
+			return false;
 		}
 
 		if (update.getObjectCsid() == null) {
-			logger.warn("skipping " + update.getAction() + " " + update.getId() + " with null object csid");
-			return;
+			logger.warn("skipping update " +  update.getId() + " (" + update.getAction() + "): object csid is null");
+			return false;
 		}
 		
 		deleteCollectionObjectMediaRelations(update.getObjectCsid(), update.getMediaCsid());
 		deleteMedia(update.getMediaCsid());
+		
+		return true;
 	}
-	
-	private void deleteCollectionObjectMediaRelations(String collectionObjectCsid, String mediaCsid) {
-		deleteRelations(collectionObjectCsid, mediaCsid);		
-		deleteRelations(mediaCsid, collectionObjectCsid);
-	}
-	
-	private String createBlob(String filename, File binaryFile) throws UploadException {
-		logger.debug("creating blob for file " + filename);
+		
+	private String createBlob(String filename, File binaryFile) {
+		logger.debug("creating blob for file " + filename + " with content " + binaryFile.getAbsolutePath());
 		
 		MultiValueMap<String, Object> form = new LinkedMultiValueMap<String, Object>();
 		form.add("file", new FileSystemResource(binaryFile));
@@ -185,14 +194,16 @@ public class CollectionSpaceRestUploader implements Uploader {
 		return csid;
 	}
 	
-	private void deleteBlob(String csid) throws UploadException {
-		logger.info("deleting blob with csid " + csid);
+	private void deleteBlob(String csid) {
+		logger.debug("deleting blob with csid " + csid);
 
 		this.restTemplate.delete(getServicesUrlTemplate(), BLOB_SERVICE_NAME, csid);		
+
+		logger.info("deleted blob with csid " + csid);
 	}
 	
-	private String createMedia(String title, Integer imageNumber, String blobCsid) throws UploadException {
-		logger.debug("creating media with title " + title);
+	private String createMedia(String title, Integer imageNumber, String blobCsid) {
+		logger.debug("creating media with title " + title + ", image number " + imageNumber + ", blob " + blobCsid);
 		
 		Media media = new Media();
 		media.common.title = title;
@@ -222,7 +233,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 	}
 	
 	private void updateMedia(Media media) {
-		logger.info("updating media with csid " + media.csid);
+		logger.debug("updating media with csid " + media.csid);
 
 		try {
 			this.restTemplate.put(getServicesUrlTemplate(), media, MEDIA_SERVICE_NAME, media.csid);
@@ -230,20 +241,24 @@ public class CollectionSpaceRestUploader implements Uploader {
 		catch(HttpClientErrorException e) {
 			logger.error("could not update media with csid " + media.csid, e);
 		}
+		
+		logger.info("updated media with csid " + media.csid);
 	}
 	
 	private void deleteMedia(String csid) {
 		// This also deletes the associated blob.
 		
-		logger.info("deleting media with csid " + csid);
+		logger.debug("deleting media with csid " + csid);
 
 		this.restTemplate.delete(getServicesUrlTemplate(), MEDIA_SERVICE_NAME, csid);		
 
+		logger.info("deleted media with csid " + csid);
 	}
 	
 	private List<String> createRelations(CollectionObject collectionObject, Media media) {
-		logger.debug("creating relations between collectionobject " + collectionObject.csid + " and media " + media.csid);
-
+		logger.debug("creating relations between collection object " + collectionObject.csid + " and media " + media.csid);
+		logger.debug("creating forward relation");
+		
 		List<String> csids = new ArrayList<String>();
 		
 		Relation relation = new Relation();
@@ -262,7 +277,8 @@ public class CollectionSpaceRestUploader implements Uploader {
 		csids.add(csid);
 		
 		logger.info("created relation with csid " + csid);
-
+		logger.debug("creating backward relation");
+		
 		Relation backRelation = new Relation();
 		backRelation.common.relationshipType = "affects";
 		backRelation.common.subjectDocumentType = Media.DOCTYPE;
@@ -282,8 +298,17 @@ public class CollectionSpaceRestUploader implements Uploader {
 		
 		return csids;
 	}
-	
+
+	private void deleteCollectionObjectMediaRelations(String collectionObjectCsid, String mediaCsid) {
+		logger.debug("deleting relations between collection object " + collectionObjectCsid + " and media " + mediaCsid);
+
+		deleteRelations(collectionObjectCsid, mediaCsid);		
+		deleteRelations(mediaCsid, collectionObjectCsid);
+	}
+
 	private void deleteRelations(String subjectCsid, String objectCsid) {
+		logger.debug("finding relations between cubject " + subjectCsid + " and object " + objectCsid);
+		
 		RelationList relationList = this.restTemplate.getForObject(getServicesUrlTemplate() + RELATION_SEARCH_TEMPLATE, RelationList.class, RELATION_SERVICE_NAME, null, subjectCsid, objectCsid);
 		List<String> csids = new ArrayList<String>();
 		
@@ -291,16 +316,19 @@ public class CollectionSpaceRestUploader implements Uploader {
 			csids.add(item.csid);
 		}
 		
+		logger.debug("found " + csids.size() + " relations");
+		
 		for (String csid : csids) {
 			deleteRelation(csid);
 		}
 	}
 	
 	private void deleteRelation(String csid) {
-		logger.info("deleting relation with csid " + csid);
+		logger.debug("deleting relation with csid " + csid);
 
 		this.restTemplate.delete(getServicesUrlTemplate(), RELATION_SERVICE_NAME, csid);		
 
+		logger.info("deleted relation with csid " + csid);
 	}
 	
 	private CollectionObject readCollectionObject(String csid) {
@@ -311,7 +339,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 			collectionObject.csid = csid;
 		}
 		catch(HttpClientErrorException e) {
-			logger.error("could not read collectionobject with csid " + csid, e);
+			logger.error("could not read collection object with csid " + csid, e);
 		}
 		
 		return collectionObject;

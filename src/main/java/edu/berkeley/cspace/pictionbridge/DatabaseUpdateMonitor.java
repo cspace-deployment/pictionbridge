@@ -157,7 +157,7 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		
 		try {
 			if (file.exists()) {
-				logger.warn("binary file " + file.getPath() + " exists and will be overwritten");
+				logger.warn("binary file exists and will be overwritten: " + file.getPath());
 			}
 			else {
 				file.createNewFile();

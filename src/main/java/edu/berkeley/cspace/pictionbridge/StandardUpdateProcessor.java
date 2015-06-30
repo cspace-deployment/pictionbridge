@@ -27,52 +27,55 @@ public class StandardUpdateProcessor implements UpdateProcessor {
 		int count = 0;
 		
 		List<Update> updates = getUpdateMonitor().getUpdates(limit);
-		List<Update> uploads = new ArrayList<Update>(uploadBatchSize);
+		List<Update> sentUpdates = new ArrayList<Update>();
+		List<Update> batch = new ArrayList<Update>(uploadBatchSize);
+		
+		logger.info("found " + updates.size() + " updates");
 		
 		for (Update update : updates) {
 			count++;
 			
 			logger.info("processing update " + count + "/" + updates.size() + " (" + totalCount + " updates found" + (limit == null ? "" : ", limited to " + limit) + ")\n" + update.toString());
 			
-			if (update.getAction() == UpdateAction.NEW) {
-				uploads.add(update);
+			if (getUploader().supportsAction(update.getAction())) {
+				batch.add(update);
 				
-				if (uploads.size() == uploadBatchSize) {
-					sendUploads(uploads);
-					uploads.clear();
+				if (batch.size() == uploadBatchSize) {
+					sentUpdates.addAll(sendBatch(batch));
+					batch.clear();
 				}
 			}
 			else {
-				// Some actions are not implemented yet.
-				
-				logger.warn("skipping update with action " + update.getAction());
+				logger.warn("skipping update " + update.getId() + ": uploader does not support action " + update.getAction());
 			}
 		}
 		
-		
-		if (uploads.size() > 0) {
-			sendUploads(uploads);
-		}
-		
-		return count;
-	}
-	
-	private void sendUploads(List<Update> updates) {
-		try {
-			getUploader().send(updates);
-		}
-		catch(UploadException e) {
-			logger.error("error sending batch", e);
-			return;
+		if (batch.size() > 0) {
+			sentUpdates.addAll(sendBatch(batch));
 		}
 		
 		// The upload was successfully submitted.
 		
 		if (getDeleteProcessedUpdates()) {
-			for (Update update : updates) {
-				getUpdateMonitor().deleteUpdate(update);
+			for (Update sentUpdate : sentUpdates) {
+				getUpdateMonitor().deleteUpdate(sentUpdate);
 			}
 		}
+
+		return sentUpdates.size();
+	}
+	
+	private List<Update> sendBatch(List<Update> updates) {
+		List<Update> sentUpdates = new ArrayList<Update>();
+		
+		try {
+			sentUpdates = getUploader().send(updates);
+		}
+		catch(UploadException e) {
+			logger.error("error sending batch", e);
+		}
+		
+		return sentUpdates;
 	}
 	
 	public void close() {

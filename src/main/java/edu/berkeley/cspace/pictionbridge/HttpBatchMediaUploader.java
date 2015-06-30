@@ -31,6 +31,11 @@ public class HttpBatchMediaUploader implements Uploader {
 	}
 	
 	@Override
+	public boolean supportsAction(UpdateAction action) {
+		return (action == UpdateAction.NEW);
+	}
+	
+	@Override
 	public void close() {
 		try {
 			client.close();
@@ -40,7 +45,7 @@ public class HttpBatchMediaUploader implements Uploader {
 	}
 	
 	@Override
-	public void send(List<Update> updates) throws UploadException {
+	public List<Update> send(List<Update> updates) throws UploadException {
 		HttpPost httpPost = new HttpPost(getUploadUrl());
 		MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
 		
@@ -98,6 +103,8 @@ public class HttpBatchMediaUploader implements Uploader {
 			
 			throw new UploadException(response.getStatusLine().getReasonPhrase());
 		}
+		
+		return updates;
 	}
 	
 	public String getUploadUrl() {

@@ -20,6 +20,8 @@ public class Update {
 	private Timestamp dateTimeAddedToPiction;
 	private Timestamp dateTimeUploaded;
 	private File binaryFile;
+	private String objectNumber;
+	private Integer imageNumber;
 	
 	public long getId() {
 		return id;
@@ -141,6 +143,22 @@ public class Update {
 		this.binaryFile = binaryFile;
 	}
 
+	public String getObjectNumber() {
+		return objectNumber;
+	}
+
+	public void setObjectNumber(String objectNumber) {
+		this.objectNumber = objectNumber;
+	}
+
+	public Integer getImageNumber() {
+		return imageNumber;
+	}
+
+	public void setImageNumber(Integer imageNumber) {
+		this.imageNumber = imageNumber;
+	}
+
 	public String toString() {
 		StringBuilder str = new StringBuilder();
 		
@@ -157,7 +175,9 @@ public class Update {
 		str.append("action: " + Objects.toString(this.getAction(), "") + "\n");
 		str.append("relationship: " + Objects.toString(this.getRelationship(), "") + "\n");
 		str.append("dateTimeAddedToPiction: " + Objects.toString(this.getDateTimeAddedToPiction(), "") + "\n");
-		str.append("dateTimeUploaded: " + Objects.toString(this.getDateTimeUploaded(), ""));
+		str.append("dateTimeUploaded: " + Objects.toString(this.getDateTimeUploaded(), "") + "\n");
+		str.append("objectNumber: " + Objects.toString(this.getObjectNumber(), "") + "\n");
+		str.append("imageNumber: " + Objects.toString(this.getImageNumber(), ""));
 		
 		return str.toString();
 	}

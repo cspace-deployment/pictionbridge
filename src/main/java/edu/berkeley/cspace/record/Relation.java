@@ -1,4 +1,4 @@
-package edu.berkeley.cspace.jaxb;
+package edu.berkeley.cspace.record;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;

@@ -20,10 +20,10 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriTemplate;
 
-import edu.berkeley.cspace.jaxb.CollectionObject;
-import edu.berkeley.cspace.jaxb.Media;
-import edu.berkeley.cspace.jaxb.Relation;
-import edu.berkeley.cspace.jaxb.RelationList;
+import edu.berkeley.cspace.record.CollectionObject;
+import edu.berkeley.cspace.record.Media;
+import edu.berkeley.cspace.record.Relation;
+import edu.berkeley.cspace.record.RelationList;
 
 public class CollectionSpaceRestUploader implements Uploader {
 	private static final Logger logger = LogManager.getLogger(CollectionSpaceRestUploader.class);
@@ -39,6 +39,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 	private Credentials credentials;
 	private String servicesUrlTemplate;
 	private UriTemplate mediaRefNameTemplate;
+	private FilenameParser filenameParser;
 
 	public CollectionSpaceRestUploader() {
 		
@@ -56,6 +57,8 @@ public class CollectionSpaceRestUploader implements Uploader {
 	
 	@Override
 	public List<Update> send(List<Update> updates) throws UploadException {
+		getFilenameParser().parse(updates);
+		
 		List<Update> sentUpdates = new ArrayList<Update>();
 		
 		for (Update update : updates) {
@@ -353,13 +356,19 @@ public class CollectionSpaceRestUploader implements Uploader {
 	}
 
 	private Integer getImageNumber(Update update) {
-		Integer imageNumber = null;
+		Integer imageNumber = update.getImageNumber();
 
-		if (update.getRelationship() == UpdateRelationship.PRIMARY) {
-			imageNumber = 1;
-		}
-		else if (update.getRelationship() == UpdateRelationship.ALTERNATE) {
-			imageNumber = 2;
+		if (imageNumber == null) {
+			logger.warn("image number is null for update " + update.getId());
+			
+			if (update.getRelationship() == UpdateRelationship.PRIMARY) {
+				logger.warn("assuming image number is 1 for primary relation");
+				imageNumber = 1;
+			}
+			else if (update.getRelationship() == UpdateRelationship.ALTERNATE) {
+				logger.warn("assuming image number is 2 for alternate relation");
+				imageNumber = 2;
+			}
 		}
 		
 		return imageNumber;
@@ -392,5 +401,13 @@ public class CollectionSpaceRestUploader implements Uploader {
 
 	public void setMediaRefNameTemplate(String mediaRefNameTemplate) {
 		this.mediaRefNameTemplate = new UriTemplate(mediaRefNameTemplate);
+	}
+
+	public FilenameParser getFilenameParser() {
+		return filenameParser;
+	}
+
+	public void setFilenameParser(FilenameParser filenameParser) {
+		this.filenameParser = filenameParser;
 	}
 }

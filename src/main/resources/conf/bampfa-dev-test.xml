@@ -14,13 +14,14 @@
 		
 		<!-- The number of updates to send in a single batch to the uploader. -->
 		<!-- Multiple batches may be submitted until the available updates are exhausted. -->
-		<!-- Default=100 -->
-		<property name="uploadBatchSize" value="10"/>
+		<!-- The effect of this setting depends on the uploader implementation. -->
+		<!-- Default: 100 -->
+		<property name="uploadBatchSize" value="20"/>
 		
 		<!-- Set whether or not updates should be deleted from the monitor queue after they have been -->
 		<!-- processed. If false, the updates will be processed again on the next invocation, so typically -->
 		<!-- this should only be set to false for testing. -->
-		<!-- Default=true -->
+		<!-- Default: true -->
 		<property name="deleteProcessedUpdates" value="false"/>
 	</bean>
 	
@@ -48,43 +49,24 @@
 	<bean id="cspaceRestUploader" class="edu.berkeley.cspace.pictionbridge.CollectionSpaceRestUploader">
 		<property name="credentials">
 			<bean class="org.apache.http.auth.UsernamePasswordCredentials">
-				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_USER'] }" />
+				<!-- User -->
+				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_USER'] }" />	
+				<!-- Password -->
 				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_PW'] }" />
 			</bean>
 		</property>
 
 		<property name="servicesUrlTemplate" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/{serviceName}/{csid}"/>
 		<property name="mediaRefNameTemplate" value="urn:cspace:bampfa.cspace.berkeley.edu:media:id({csid})"/>
+		
+		<property name="filenameParser" ref="bmuFilenameParser"/>
 	</bean>
 	
-	<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.pictionbridge.HttpBatchMediaUploader">
-		<!-- The URL of the BMU upload endpoint. -->
-		<property name="uploadUrl" value="https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload"/>
-		
-		<!-- The name of the field into which to place the files to upload. -->
-		<!-- Default=imagefiles -->
-		<property name="fileFieldName" value="imagefiles"/>
-		
-		<!-- Additional text fields to send with the upload. -->
-		<!-- These are passed straight to the BMU. The BMU determines what these fields do. -->
-		<property name="textFields">
-			<map>
-				<entry key="rightsholder" value=""/>
-				<entry key="overriderightsholder" value="always"/>
-				<entry key="contributor" value=""/>
-				<entry key="overridecontributor" value="always"/>
-				<entry key="creator" value=""/>
-				<entry key="overridecreator" value="always"/>
-				
-				<!-- Uncomment validateonly to test the upload without actually queueing a job. -->
-				<!-- <entry key="validateonly" value="on"/> -->
-				
-				<!-- Uncomment uploadmedia to queue the job for offline processing. -->
-				<entry key="uploadmedia" value="yes"/>
-				
-				<!-- Uncomment createmedia to process the job immediately. -->
-				<!-- <entry key="createmedia" value="yes"/> -->
-			</map>
+	<bean id="bmuFilenameParser" class="edu.berkeley.cspace.pictionbridge.HttpBatchMediaUploaderFilenameParser">
+		<property name="batchMediaUploader">
+			<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.pictionbridge.HttpBatchMediaUploader">
+				<property name="uploadUrl" value="https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload" />
+			</bean>		
 		</property>
-	</bean>	
+	</bean>
 </beans>

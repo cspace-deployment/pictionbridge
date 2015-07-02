@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- A sample for configuring the BMU. -->
+	
+	<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.pictionbridge.HttpBatchMediaUploader">
+		<!-- The URL of the BMU upload endpoint. -->
+		<property name="uploadUrl" value="https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload"/>
+		
+		<!-- Set to true to parse filenames only, or false to actually do an upload. -->
+		<!-- Default: false -->
+		<property name="parseOnly" value="true"/>
+		
+		<!-- Set to true to upload immediately, or false to queue for offline processing. -->
+		<!-- Has no effect if parseOnly is true. -->
+		<!-- Default: false -->
+		<property name="uploadImmediately" value="false"/>
+				
+		<!-- Additional text fields to send with the upload. -->
+		<!-- These are passed straight to the BMU. The BMU determines what these fields do. -->
+		<property name="textFields">
+			<map>
+				<entry key="rightsholder" value=""/>
+				<entry key="overriderightsholder" value="always"/>
+				<entry key="contributor" value=""/>
+				<entry key="overridecontributor" value="always"/>
+				<entry key="creator" value=""/>
+				<entry key="overridecreator" value="always"/>
+			</map>
+		</property>
+	</bean>
+</beans>

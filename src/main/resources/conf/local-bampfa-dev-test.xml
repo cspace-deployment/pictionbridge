@@ -10,12 +10,13 @@
 		
 		<!-- The maximum number of updates that may be processed in a single invocation. -->
 		<!-- Comment this out to process all available updates. -->
-		<property name="updateLimit" value="100"/>
+		<property name="updateLimit" value="1"/>
 		
 		<!-- The number of updates to send in a single batch to the uploader. -->
 		<!-- Multiple batches may be submitted until the available updates are exhausted. -->
+		<!-- The effect of this setting depends on the uploader implementation. -->
 		<!-- Default: 100 -->
-		<property name="uploadBatchSize" value="100"/>
+		<property name="uploadBatchSize" value="20"/>
 		
 		<!-- Set whether or not updates should be deleted from the monitor queue after they have been -->
 		<!-- processed. If false, the updates will be processed again on the next invocation, so typically -->
@@ -49,8 +50,7 @@
 		<property name="credentials">
 			<bean class="org.apache.http.auth.UsernamePasswordCredentials">
 				<!-- User -->
-				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_USER'] }" />
-				
+				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_USER'] }" />	
 				<!-- Password -->
 				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_PW'] }" />
 			</bean>
@@ -65,36 +65,8 @@
 	<bean id="bmuFilenameParser" class="edu.berkeley.cspace.pictionbridge.HttpBatchMediaUploaderFilenameParser">
 		<property name="batchMediaUploader">
 			<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.pictionbridge.HttpBatchMediaUploader">
-				<!-- The URL of the BMU upload endpoint. -->
 				<property name="uploadUrl" value="https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload" />
 			</bean>		
 		</property>
 	</bean>
-	
-	<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.pictionbridge.HttpBatchMediaUploader">
-		<!-- The URL of the BMU upload endpoint. -->
-		<property name="uploadUrl" value="https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload"/>
-		
-		<!-- Set to true to parse filenames only, or false to actually do an upload. -->
-		<!-- Default: false -->
-		<property name="parseOnly" value="true"/>
-		
-		<!-- Set to true to upload immediately, or false to queue for offline processing. -->
-		<!-- Has no effect if parseOnly is true. -->
-		<!-- Default: false -->
-		<property name="uploadImmediately" value="false"/>
-				
-		<!-- Additional text fields to send with the upload. -->
-		<!-- These are passed straight to the BMU. The BMU determines what these fields do. -->
-		<property name="textFields">
-			<map>
-				<entry key="rightsholder" value=""/>
-				<entry key="overriderightsholder" value="always"/>
-				<entry key="contributor" value=""/>
-				<entry key="overridecontributor" value="always"/>
-				<entry key="creator" value=""/>
-				<entry key="overridecreator" value="always"/>
-			</map>
-		</property>
-	</bean>	
 </beans>

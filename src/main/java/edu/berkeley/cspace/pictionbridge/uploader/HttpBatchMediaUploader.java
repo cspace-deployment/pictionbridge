@@ -1,4 +1,4 @@
-package edu.berkeley.cspace.pictionbridge;
+package edu.berkeley.cspace.pictionbridge.uploader;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -17,9 +17,10 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import edu.berkeley.cspace.pictionbridge.update.Update;
+import edu.berkeley.cspace.pictionbridge.update.UpdateAction;
 
 public class HttpBatchMediaUploader implements Uploader {
 	private static final Logger logger = LogManager.getLogger(HttpBatchMediaUploader.class);

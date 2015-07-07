@@ -4,28 +4,16 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-	<bean id="updateProcessor" class="edu.berkeley.cspace.pictionbridge.StandardUpdateProcessor">
-		<property name="updateMonitor" ref="databaseUpdateMonitor"/>
-		<property name="uploader" ref="cspaceRestUploader"/>
-		
-		<!-- The maximum number of updates that may be processed in a single invocation. -->
-		<!-- Comment this out to process all available updates. -->
-		<property name="updateLimit" value="1"/>
-		
-		<!-- The number of updates to send in a single batch to the uploader. -->
-		<!-- Multiple batches may be submitted until the available updates are exhausted. -->
-		<!-- The effect of this setting depends on the uploader implementation. -->
-		<!-- Default: 100 -->
-		<property name="uploadBatchSize" value="20"/>
-		
-		<!-- Set whether or not updates should be deleted from the monitor queue after they have been -->
-		<!-- processed. If false, the updates will be processed again on the next invocation, so typically -->
-		<!-- this should only be set to false for testing. -->
-		<!-- Default: true -->
-		<property name="deleteProcessedUpdates" value="false"/>
-	</bean>
+	<!-- PictionBridge looks for beans named updateMonitor and updateProcessor. -->
+	<!-- Make aliases to the desired implementations. -->	
+ 	<alias name="databaseUpdateMonitor" alias="updateMonitor" />
+ 	<alias name="rootUpdateProcessor" alias="updateProcessor"/>
 	
-	<bean id="databaseUpdateMonitor" class="edu.berkeley.cspace.pictionbridge.DatabaseUpdateMonitor">
+	<bean id="databaseUpdateMonitor" class="edu.berkeley.cspace.pictionbridge.monitor.DatabaseUpdateMonitor">
+		<!-- The maximum number of updates that may be retrieved at once. -->
+		<!-- Comment this out to retrieve all available updates. -->
+		<property name="limit" value="1"/>
+		
 		<!-- The path to a directory where files that need be created will be stored. -->
 		<!-- Extracted binaries will be stored in a subdirectory inside of this directory. -->
 		<property name="workPath" value="#{ systemProperties['pictionBridge.home'] }/work"/>
@@ -46,7 +34,87 @@
 	    </property>
 	</bean>
 	
-	<bean id="cspaceRestUploader" class="edu.berkeley.cspace.pictionbridge.CollectionSpaceRestUploader">
+	<bean id="rootUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.ChainedUpdateProcessor">
+		<property name="processors">
+			<list>
+				<ref bean="batchedUpdateProcessor"/>
+				<ref bean="deletingUpdateProcessor"/>
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="batchedUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedUpdateProcessor">		
+		<!-- The number of updates to send in a single batch to the batch processor. -->
+		<!-- Multiple batches may be submitted until the available updates are exhausted. -->
+		<!-- Default: 100 -->
+		<property name="batchSize" value="20"/>	
+		
+		<!-- The update processor to invoke on each batch. -->
+		<property name="batchProcessor" ref="defaultUpdateProcessor"/>
+	</bean>
+		
+	<bean id="defaultUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
+		<property name="filter">
+			<bean class="edu.berkeley.cspace.pictionbridge.filter.CompleteUpdateFilter"/>
+		</property>
+
+		<property name="acceptedProcessor" ref="completeUpdateProcessor"/>
+		<property name="rejectedProcessor" ref="incompleteUpdateProcessor"/>		
+	</bean>
+	
+ 	<bean id="completeUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
+		<property name="filter">
+			<bean class="edu.berkeley.cspace.pictionbridge.filter.NewUpdateFilter"/>
+		</property>
+
+		<property name="acceptedProcessor" ref="newUpdateProcessor"/>		
+		<property name="rejectedProcessor" ref="unsupportedActionProcessor"/>				
+	</bean>
+	
+ 	<bean id="newUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
+		<property name="filter">
+			<bean class="edu.berkeley.cspace.pictionbridge.filter.PostLaunchUpdateFilter"/>
+		</property>
+
+		<property name="acceptedProcessor" ref="postLaunchNewUpdateProcessor"/>		
+		<!-- <property name="rejectedProcessor" ref="preLaunchNewUpdateProcessor"/>	-->
+		<property name="rejectedProcessor" ref="postLaunchNewUpdateProcessor"/>		
+	</bean>
+
+ 	<bean id="postLaunchNewUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.ChainedUpdateProcessor">
+		<property name="processors">
+			<list>
+				<ref bean="filenameParsingUpdateProcessor"/>
+				<ref bean="uploadingUpdateProcessor"/>
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="uploadingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.UploadingUpdateProcessor">
+		<property name="uploader" ref="cspaceRestUploader"/>
+	</bean>
+	
+	<bean id="filenameParsingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FilenameParsingUpdateProcessor">
+		<property name="filenameParser" ref="bmuFilenameParser"/>
+	</bean>
+	
+	<bean id="preLaunchNewUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SkippingUpdateProcessor">
+		<property name="message" value="new image was added before Piction launch"/>
+	</bean>
+	
+	<bean id="unsupportedActionProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
+		<property name="message" value="update has unsupported action"/>
+	</bean>
+
+	<bean id="incompleteUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
+		<property name="message" value="update is incomplete"/>
+	</bean>
+	
+	<bean id="deletingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SkippingUpdateProcessor">
+		<property name="message" value="not really deleting"/>
+	</bean>
+	
+	<bean id="cspaceRestUploader" class="edu.berkeley.cspace.pictionbridge.uploader.CollectionSpaceRestUploader">
 		<property name="credentials">
 			<bean class="org.apache.http.auth.UsernamePasswordCredentials">
 				<!-- User -->
@@ -58,13 +126,11 @@
 
 		<property name="servicesUrlTemplate" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/{serviceName}/{csid}"/>
 		<property name="mediaRefNameTemplate" value="urn:cspace:bampfa.cspace.berkeley.edu:media:id({csid})"/>
-		
-		<property name="filenameParser" ref="bmuFilenameParser"/>
 	</bean>
 	
-	<bean id="bmuFilenameParser" class="edu.berkeley.cspace.pictionbridge.HttpBatchMediaUploaderFilenameParser">
+	<bean id="bmuFilenameParser" class="edu.berkeley.cspace.pictionbridge.parser.HttpBatchMediaUploaderFilenameParser">
 		<property name="batchMediaUploader">
-			<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.pictionbridge.HttpBatchMediaUploader">
+			<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.pictionbridge.uploader.HttpBatchMediaUploader">
 				<property name="uploadUrl" value="https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload" />
 			</bean>		
 		</property>

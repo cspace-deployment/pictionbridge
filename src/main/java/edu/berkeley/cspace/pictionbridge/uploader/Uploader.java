@@ -1,6 +1,9 @@
-package edu.berkeley.cspace.pictionbridge;
+package edu.berkeley.cspace.pictionbridge.uploader;
 
 import java.util.List;
+
+import edu.berkeley.cspace.pictionbridge.update.Update;
+import edu.berkeley.cspace.pictionbridge.update.UpdateAction;
 
 public interface Uploader {
 	public List<Update> send(List<Update> updates) throws UploadException;

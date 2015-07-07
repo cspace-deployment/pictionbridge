@@ -1,4 +1,4 @@
-package edu.berkeley.cspace.pictionbridge;
+package edu.berkeley.cspace.pictionbridge.uploader;
 
 import java.util.List;
 

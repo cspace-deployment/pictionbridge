@@ -1,4 +1,4 @@
-package edu.berkeley.cspace.pictionbridge;
+package edu.berkeley.cspace.pictionbridge.monitor;
 
 public class UpdateMonitorException extends RuntimeException {
 	private static final long serialVersionUID = 1L;

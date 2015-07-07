@@ -1,4 +1,4 @@
-package edu.berkeley.cspace.pictionbridge;
+package edu.berkeley.cspace.pictionbridge.parser;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -6,6 +6,11 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import edu.berkeley.cspace.pictionbridge.update.Update;
+import edu.berkeley.cspace.pictionbridge.uploader.HttpBatchMediaUploadResult;
+import edu.berkeley.cspace.pictionbridge.uploader.HttpBatchMediaUploader;
+import edu.berkeley.cspace.pictionbridge.uploader.UploadException;
 
 public class HttpBatchMediaUploaderFilenameParser implements FilenameParser {
 	private static final Logger logger = LogManager.getLogger(HttpBatchMediaUploaderFilenameParser.class);

@@ -1,4 +1,4 @@
-package edu.berkeley.cspace.pictionbridge;
+package edu.berkeley.cspace.pictionbridge.uploader;
 
 import java.io.File;
 import java.net.URI;
@@ -20,6 +20,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriTemplate;
 
+import edu.berkeley.cspace.pictionbridge.update.Update;
+import edu.berkeley.cspace.pictionbridge.update.UpdateAction;
+import edu.berkeley.cspace.pictionbridge.update.UpdateRelationship;
 import edu.berkeley.cspace.record.CollectionObject;
 import edu.berkeley.cspace.record.Media;
 import edu.berkeley.cspace.record.Relation;
@@ -39,7 +42,6 @@ public class CollectionSpaceRestUploader implements Uploader {
 	private Credentials credentials;
 	private String servicesUrlTemplate;
 	private UriTemplate mediaRefNameTemplate;
-	private FilenameParser filenameParser;
 
 	public CollectionSpaceRestUploader() {
 		
@@ -57,8 +59,6 @@ public class CollectionSpaceRestUploader implements Uploader {
 	
 	@Override
 	public List<Update> send(List<Update> updates) throws UploadException {
-		getFilenameParser().parse(updates);
-		
 		List<Update> sentUpdates = new ArrayList<Update>();
 		
 		for (Update update : updates) {
@@ -85,9 +85,6 @@ public class CollectionSpaceRestUploader implements Uploader {
 	}
 	
 	private boolean doNew(Update update) {
-		// Test...
-		// update.setObjectCsid("5dfbcb91-f924-43ca-905a");
-		
 		if (update.getObjectCsid() == null) {
 			logger.warn("skipping update " +  update.getId() + " (" + update.getAction() + "): object csid is null");
 			return false;
@@ -119,9 +116,6 @@ public class CollectionSpaceRestUploader implements Uploader {
 	}
 	
 	private boolean doUpdate(Update update) {
-		// Test...
-		// update.setMediaCsid("5b7aac25-bc30-4e33-91ef");
-
 		// Blobs currently can't have their binary updated (CSPACE-6633).
 		// Instead, create a new blob, set the media blobCsid to point
 		// to the new blob, and then delete the old blob.
@@ -157,11 +151,6 @@ public class CollectionSpaceRestUploader implements Uploader {
 	}
 	
 	private boolean doDelete(Update update) {
-		// Test...
-		// update.setBlobCsid("6b9844fc-1947-4a2f-94d4");
-		// update.setMediaCsid("0044de76-a89a-4688-a9e3");
-		// update.setObjectCsid("5dfbcb91-f924-43ca-905a");
-		
 		if (update.getBlobCsid() == null) {
 			logger.warn("skipping update " +  update.getId() + " (" + update.getAction() + "): blob csid is null");
 			return false;
@@ -401,13 +390,5 @@ public class CollectionSpaceRestUploader implements Uploader {
 
 	public void setMediaRefNameTemplate(String mediaRefNameTemplate) {
 		this.mediaRefNameTemplate = new UriTemplate(mediaRefNameTemplate);
-	}
-
-	public FilenameParser getFilenameParser() {
-		return filenameParser;
-	}
-
-	public void setFilenameParser(FilenameParser filenameParser) {
-		this.filenameParser = filenameParser;
 	}
 }

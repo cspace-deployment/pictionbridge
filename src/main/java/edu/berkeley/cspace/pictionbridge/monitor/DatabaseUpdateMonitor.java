@@ -1,4 +1,4 @@
-package edu.berkeley.cspace.pictionbridge;
+package edu.berkeley.cspace.pictionbridge.monitor;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -19,11 +19,16 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
+import edu.berkeley.cspace.pictionbridge.update.Update;
+import edu.berkeley.cspace.pictionbridge.update.UpdateAction;
+import edu.berkeley.cspace.pictionbridge.update.UpdateRelationship;
+
 public class DatabaseUpdateMonitor implements UpdateMonitor {
 	private static final Logger logger = LogManager.getLogger(DatabaseUpdateMonitor.class);
 	
 	private static final String BINARY_DIR = "binaries";
 	
+	private Integer limit;
 	private String workPath;
 	private String interfaceTable;
 	
@@ -51,14 +56,11 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 	}
 
 	public int getUpdateCount() {
-		return this.jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + getInterfaceTable(), Integer.class);
-	}
-
-	public List<Update> getUpdates() {
-		return getUpdates(null);
+		return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + getInterfaceTable(), Integer.class);
 	}
 	
-	public List<Update> getUpdates(Integer limit) {
+	public List<Update> getUpdates() {
+		Integer limit = getLimit();
 		String sql = "SELECT id, piction_id, filename, mimetype, img_size, img_height, img_width, object_csid, media_csid, blob_csid, action, relationship, dt_addedtopiction, dt_uploaded, bimage FROM " + getInterfaceTable() + " ORDER BY dt_uploaded";
 		
 		if (limit != null) {
@@ -67,7 +69,7 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		
 		logger.debug("executing query: " + sql);
 		
-		List<Update> updates = this.jdbcTemplate.query(
+		List<Update> updates = jdbcTemplate.query(
 			sql,
 			new RowMapper<Update>() {
 				public Update mapRow(ResultSet results, int rowNum) throws SQLException {					
@@ -112,7 +114,7 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 					update.setDateTimeUploaded(results.getTimestamp(14));
 					update.setBinaryFile(extractBinary(results.getBinaryStream(15), update));
 
-					logger.debug("found update\n" + update.toString());
+					logger.info("found update\n" + update.toString());
 					
 					return update;
 				}
@@ -125,7 +127,7 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 	public void deleteUpdate(Update update) {
 		logger.debug("deleting update " + update.getId());
 
-		int rowsAffected = this.jdbcTemplate.update("DELETE FROM " + getInterfaceTable() + " WHERE id = ?", Long.valueOf(update.getId()));
+		int rowsAffected = jdbcTemplate.update("DELETE FROM " + getInterfaceTable() + " WHERE id = ?", Long.valueOf(update.getId()));
 		
 		if (rowsAffected != 1) {
 			logger.warn("deletion of update " + update.getId() + " affected " + rowsAffected + " rows");
@@ -182,6 +184,14 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		return file;
 	}
 	
+	public Integer getLimit() {
+		return limit;
+	}
+
+	public void setLimit(Integer limit) {
+		this.limit = limit;
+	}
+
 	public String getWorkPath() {
 		return workPath;
 	}

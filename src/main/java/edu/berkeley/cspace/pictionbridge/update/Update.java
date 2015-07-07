@@ -1,17 +1,17 @@
-package edu.berkeley.cspace.pictionbridge;
+package edu.berkeley.cspace.pictionbridge.update;
 
 import java.io.File;
 import java.sql.Timestamp;
 import java.util.Objects;
 
 public class Update {
-	private long id;
-	private int pictionId;
+	private Long id;
+	private Integer pictionId;
 	private String filename;
 	private String mimeType;
-	private int imgSize;
-	private int imgHeight;
-	private int imgWidth;
+	private Integer imgSize;
+	private Integer imgHeight;
+	private Integer imgWidth;
 	private String objectCsid;
 	private String mediaCsid;
 	private String blobCsid;
@@ -23,19 +23,19 @@ public class Update {
 	private String objectNumber;
 	private Integer imageNumber;
 	
-	public long getId() {
+	public Long getId() {
 		return id;
 	}
 	
-	public void setId(long id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 	
-	public int getPictionId() {
+	public Integer getPictionId() {
 		return pictionId;
 	}
 	
-	public void setPictionId(int pictionId) {
+	public void setPictionId(Integer pictionId) {
 		this.pictionId = pictionId;
 	}
 	
@@ -55,27 +55,27 @@ public class Update {
 		this.mimeType = mimeType;
 	}
 	
-	public int getImgSize() {
+	public Integer getImgSize() {
 		return imgSize;
 	}
 	
-	public void setImgSize(int imgSize) {
+	public void setImgSize(Integer imgSize) {
 		this.imgSize = imgSize;
 	}
 	
-	public int getImgHeight() {
+	public Integer getImgHeight() {
 		return imgHeight;
 	}
 	
-	public void setImgHeight(int imgHeight) {
+	public void setImgHeight(Integer imgHeight) {
 		this.imgHeight = imgHeight;
 	}
 	
-	public int getImgWidth() {
+	public Integer getImgWidth() {
 		return imgWidth;
 	}
 	
-	public void setImgWidth(int imgWidth) {
+	public void setImgWidth(Integer imgWidth) {
 		this.imgWidth = imgWidth;
 	}
 	
@@ -162,22 +162,22 @@ public class Update {
 	public String toString() {
 		StringBuilder str = new StringBuilder();
 		
-		str.append("id: " + Objects.toString(this.getId(), "") + "\n");
-		str.append("pictionId: " + Objects.toString(this.getPictionId(), "") + "\n");
-		str.append("filename: " + Objects.toString(this.getFilename(), "") + "\n");
-		str.append("mimeType: " + Objects.toString(this.getMimeType(), "") + "\n");
-		str.append("imgSize: " + Objects.toString(this.getImgSize(), "") + "\n");
-		str.append("imgHeight: " + Objects.toString(this.getImgHeight(), "") + "\n");
-		str.append("imgWidth: " + Objects.toString(this.getImgWidth(), "") + "\n");
-		str.append("objectCsid: " + Objects.toString(this.getObjectCsid(), "") + "\n");
-		str.append("mediaCsid: " + Objects.toString(this.getMediaCsid(), "") + "\n");
-		str.append("blobCsid: " + Objects.toString(this.getBlobCsid(), "") + "\n");
-		str.append("action: " + Objects.toString(this.getAction(), "") + "\n");
-		str.append("relationship: " + Objects.toString(this.getRelationship(), "") + "\n");
-		str.append("dateTimeAddedToPiction: " + Objects.toString(this.getDateTimeAddedToPiction(), "") + "\n");
-		str.append("dateTimeUploaded: " + Objects.toString(this.getDateTimeUploaded(), "") + "\n");
-		str.append("objectNumber: " + Objects.toString(this.getObjectNumber(), "") + "\n");
-		str.append("imageNumber: " + Objects.toString(this.getImageNumber(), ""));
+		str.append("id: " + Objects.toString(getId(), "") + "\n");
+		str.append("pictionId: " + Objects.toString(getPictionId(), "") + "\n");
+		str.append("filename: " + Objects.toString(getFilename(), "") + "\n");
+		str.append("mimeType: " + Objects.toString(getMimeType(), "") + "\n");
+		str.append("imgSize: " + Objects.toString(getImgSize(), "") + "\n");
+		str.append("imgHeight: " + Objects.toString(getImgHeight(), "") + "\n");
+		str.append("imgWidth: " + Objects.toString(getImgWidth(), "") + "\n");
+		str.append("objectCsid: " + Objects.toString(getObjectCsid(), "") + "\n");
+		str.append("mediaCsid: " + Objects.toString(getMediaCsid(), "") + "\n");
+		str.append("blobCsid: " + Objects.toString(getBlobCsid(), "") + "\n");
+		str.append("action: " + Objects.toString(getAction(), "") + "\n");
+		str.append("relationship: " + Objects.toString(getRelationship(), "") + "\n");
+		str.append("dateTimeAddedToPiction: " + Objects.toString(getDateTimeAddedToPiction(), "") + "\n");
+		str.append("dateTimeUploaded: " + Objects.toString(getDateTimeUploaded(), "") + "\n");
+		str.append("objectNumber: " + Objects.toString(getObjectNumber(), "") + "\n");
+		str.append("imageNumber: " + Objects.toString(getImageNumber(), ""));
 		
 		return str.toString();
 	}

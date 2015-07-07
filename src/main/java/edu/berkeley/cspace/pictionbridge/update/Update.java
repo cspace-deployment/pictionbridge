@@ -176,6 +176,7 @@ public class Update {
 		str.append("relationship: " + Objects.toString(getRelationship(), "") + "\n");
 		str.append("dateTimeAddedToPiction: " + Objects.toString(getDateTimeAddedToPiction(), "") + "\n");
 		str.append("dateTimeUploaded: " + Objects.toString(getDateTimeUploaded(), "") + "\n");
+		str.append("binaryFile: " + (getBinaryFile() != null ? getBinaryFile().getPath() : "") + "\n");
 		str.append("objectNumber: " + Objects.toString(getObjectNumber(), "") + "\n");
 		str.append("imageNumber: " + Objects.toString(getImageNumber(), ""));
 		

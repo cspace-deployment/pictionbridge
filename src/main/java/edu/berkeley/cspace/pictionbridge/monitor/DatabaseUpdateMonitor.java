@@ -35,7 +35,7 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 	private DataSource dataSource;
 	private JdbcTemplate jdbcTemplate;
 	
-	public DatabaseUpdateMonitor() {				
+	public DatabaseUpdateMonitor() {
 
 	}
 	
@@ -56,12 +56,13 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 	}
 
 	public int getUpdateCount() {
-		return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + getInterfaceTable(), Integer.class);
+		return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + getInterfaceTable() + " WHERE dt_processed IS NULL", Integer.class);
 	}
 	
+	@Override
 	public List<Update> getUpdates() {
 		Integer limit = getLimit();
-		String sql = "SELECT id, piction_id, filename, mimetype, img_size, img_height, img_width, object_csid, media_csid, blob_csid, action, relationship, dt_addedtopiction, dt_uploaded, bimage FROM " + getInterfaceTable() + " ORDER BY dt_uploaded";
+		String sql = "SELECT id, piction_id, filename, mimetype, img_size, img_height, img_width, object_csid, media_csid, blob_csid, action, relationship, dt_addedtopiction, dt_uploaded, bimage FROM " + getInterfaceTable() + " WHERE dt_processed IS NULL ORDER BY dt_uploaded";
 		
 		if (limit != null) {
 			sql += " LIMIT " + limit.toString();
@@ -72,7 +73,7 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		List<Update> updates = jdbcTemplate.query(
 			sql,
 			new RowMapper<Update>() {
-				public Update mapRow(ResultSet results, int rowNum) throws SQLException {					
+				public Update mapRow(ResultSet results, int rowNum) throws SQLException {
 					Update update = new Update();
 					
 					update.setId(results.getLong(1));
@@ -124,6 +125,29 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		return updates;
 	}
 	
+	@Override
+	public void markUpdateComplete(Update update) {
+		logger.debug("marking update " + update.getId() + " complete");
+	
+		int rowsAffected = jdbcTemplate.update("UPDATE " + getInterfaceTable() + " SET dt_processed = LOCALTIMESTAMP WHERE id = ?", Long.valueOf(update.getId()));
+
+		if (rowsAffected != 1) {
+			logger.warn("marking update " + update.getId() + " complete affected " + rowsAffected + " rows");
+		}
+	}
+
+	@Override
+	public void deleteBinary(Update update) {
+		logger.debug("deleting binary of update " + update.getId());
+		
+		int rowsAffected = jdbcTemplate.update("UPDATE " + getInterfaceTable() + " SET bimage = NULL WHERE id = ?", Long.valueOf(update.getId()));
+
+		if (rowsAffected != 1) {
+			logger.warn("deleting binary of update " + update.getId() + " affected " + rowsAffected + " rows");
+		}
+	}
+
+	@Override
 	public void deleteUpdate(Update update) {
 		logger.debug("deleting update " + update.getId());
 
@@ -155,30 +179,41 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 	
 		File file = new File(dir.toFile(), getBinaryFilename(update));
 		
-		logger.debug("extracting binary for update " + update.getId() + " to " + file.getPath());
-		
-		try {
+		if (in == null) {
 			if (file.exists()) {
-				logger.warn("binary file exists and will be overwritten: " + file.getPath());
+				logger.warn("binary for update " + update.getId() + " is null -- using previously extracted file");
 			}
 			else {
-				file.createNewFile();
-			}
-			
-			FileOutputStream out = new FileOutputStream(file);
-			
-			int bytesCopied = IOUtils.copy(in, out);
-				
-			in.close();
-			out.close();
-			
-			if (update.getImgSize() != bytesCopied) {
-				logger.warn("binary for update " + update.getId() + " has incorrect size: expected " + update.getImgSize() + ", found " + bytesCopied);
+				logger.error("binary not found for update " + update.getId());
+				file = null;
 			}
 		}
-		catch(IOException e) {
-			logger.error("error extracting binary for update " + update.getId(), e);
-			return null;
+		else {
+			logger.debug("extracting binary for update " + update.getId() + " to " + file.getPath());
+			
+			try {
+				if (file.exists()) {
+					logger.warn("binary file exists and will be overwritten: " + file.getPath());
+				}
+				else {
+					file.createNewFile();
+				}
+				
+				FileOutputStream out = new FileOutputStream(file);
+				
+				int bytesCopied = IOUtils.copy(in, out);
+					
+				in.close();
+				out.close();
+				
+				if (update.getImgSize() != bytesCopied) {
+					logger.warn("binary for update " + update.getId() + " has incorrect size: expected " + update.getImgSize() + ", found " + bytesCopied);
+				}
+			}
+			catch(IOException e) {
+				logger.error("error extracting binary for update " + update.getId(), e);
+				return null;
+			}
 		}
 		
 		return file;

@@ -38,7 +38,7 @@
 		<property name="processors">
 			<list>
 				<ref bean="batchedUpdateProcessor"/>
-				<ref bean="deletingUpdateProcessor"/>
+				<ref bean="postUpdateProcessor"/>
 			</list>
 		</property>
 	</bean>
@@ -59,7 +59,7 @@
 		</property>
 
 		<property name="acceptedProcessor" ref="completeUpdateProcessor"/>
-		<property name="rejectedProcessor" ref="incompleteUpdateProcessor"/>		
+		<property name="rejectedProcessor" ref="incompleteUpdateProcessor"/>
 	</bean>
 	
  	<bean id="completeUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
@@ -67,8 +67,8 @@
 			<bean class="edu.berkeley.cspace.pictionbridge.filter.NewUpdateFilter"/>
 		</property>
 
-		<property name="acceptedProcessor" ref="newUpdateProcessor"/>		
-		<property name="rejectedProcessor" ref="unsupportedActionProcessor"/>				
+		<property name="acceptedProcessor" ref="newUpdateProcessor"/>
+		<property name="rejectedProcessor" ref="unsupportedActionProcessor"/>
 	</bean>
 	
  	<bean id="newUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
@@ -76,9 +76,8 @@
 			<bean class="edu.berkeley.cspace.pictionbridge.filter.PostLaunchUpdateFilter"/>
 		</property>
 
-		<property name="acceptedProcessor" ref="postLaunchNewUpdateProcessor"/>		
-		<!-- <property name="rejectedProcessor" ref="preLaunchNewUpdateProcessor"/>	-->
-		<property name="rejectedProcessor" ref="postLaunchNewUpdateProcessor"/>		
+		<property name="acceptedProcessor" ref="postLaunchNewUpdateProcessor"/>
+		<!-- <property name="rejectedProcessor" ref="preLaunchNewUpdateProcessor"/> -->
 	</bean>
 
  	<bean id="postLaunchNewUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.ChainedUpdateProcessor">
@@ -88,6 +87,14 @@
 				<ref bean="uploadingUpdateProcessor"/>
 			</list>
 		</property>
+	</bean>
+	
+	<bean id="postUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.MonitorManagingUpdateProcessor">
+		<property name="monitor" ref="databaseUpdateMonitor"/>
+		
+		<property name="markComplete" value="true"/>
+		<property name="deleteBinary" value="true"/>
+		<property name="deleteUpdate" value="false"/>
 	</bean>
 	
 	<bean id="uploadingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.UploadingUpdateProcessor">
@@ -108,10 +115,6 @@
 
 	<bean id="incompleteUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
 		<property name="message" value="update is incomplete"/>
-	</bean>
-	
-	<bean id="deletingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SkippingUpdateProcessor">
-		<property name="message" value="not really deleting"/>
 	</bean>
 	
 	<bean id="cspaceRestUploader" class="edu.berkeley.cspace.pictionbridge.uploader.CollectionSpaceRestUploader">

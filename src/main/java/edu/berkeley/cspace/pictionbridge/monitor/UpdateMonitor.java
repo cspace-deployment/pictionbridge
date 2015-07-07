@@ -9,6 +9,8 @@ public interface UpdateMonitor {
 	public int getUpdateCount();
 	
 	public List<Update> getUpdates();
+	public void markUpdateComplete(Update update);
+	public void deleteBinary(Update update);
 	public void deleteUpdate(Update update);
 	
 	public Integer getLimit();

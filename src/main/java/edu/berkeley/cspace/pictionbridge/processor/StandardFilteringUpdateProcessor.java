@@ -31,7 +31,9 @@ public class StandardFilteringUpdateProcessor extends AbstractFilteringUpdatePro
 		for (Update update : updates) {
 			UpdateProcessor updateProcessor = getFilter().accept(update) ? getAcceptedProcessor() : getRejectedProcessor();
 			
-			processedUpdates.addAll(updateProcessor.processUpdates(Arrays.asList(update)));
+			if (updateProcessor != null) {
+				processedUpdates.addAll(updateProcessor.processUpdates(Arrays.asList(update)));
+			}
 		}
 		
 		return processedUpdates;

@@ -31,7 +31,7 @@ public class BatchedUpdateProcessor implements UpdateProcessor {
 		List<Update> batch = new ArrayList<Update>(batchSize);
 		List<Update> processedUpdates = new ArrayList<Update>();
 		
-		for (Update update : updates) {			
+		for (Update update : updates) {
 			batch.add(update);
 			
 			if (batch.size() == batchSize) {

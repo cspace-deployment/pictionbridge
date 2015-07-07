@@ -6,7 +6,7 @@
 
 	<!-- A sample for configuring the BMU. -->
 	
-	<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.pictionbridge.HttpBatchMediaUploader">
+	<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.pictionbridge.uploader.HttpBatchMediaUploader">
 		<!-- The URL of the BMU upload endpoint. -->
 		<property name="uploadUrl" value="https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload"/>
 		

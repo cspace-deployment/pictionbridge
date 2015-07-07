@@ -33,20 +33,20 @@ public class BatchedFilteringUpdateProcessor extends AbstractFilteringUpdateProc
 		logger.info(getFilter().getClass().getSimpleName() + " rejected " + rejectedUpdates.size() + " updates, accepted " + updates.size() + " updates");
 		
 		if (isProcessRejectedBeforeAccepted()) {
-			if (rejectedUpdates.size() > 0) {
+			if (getRejectedProcessor() != null && rejectedUpdates.size() > 0) {
 				processedUpdates.addAll(getRejectedProcessor().processUpdates(rejectedUpdates));
 			}
 			
-			if (updates.size() > 0) {
-				processedUpdates.addAll(getAcceptedProcessor().processUpdates(updates));	
+			if (getAcceptedProcessor() != null && updates.size() > 0) {
+				processedUpdates.addAll(getAcceptedProcessor().processUpdates(updates));
 			}
 		}
 		else {
-			if (updates.size() > 0) {
-				processedUpdates.addAll(getAcceptedProcessor().processUpdates(updates));	
+			if (getAcceptedProcessor() != null && updates.size() > 0) {
+				processedUpdates.addAll(getAcceptedProcessor().processUpdates(updates));
 			}
 
-			if (rejectedUpdates.size() > 0) {
+			if (getRejectedProcessor() != null && rejectedUpdates.size() > 0) {
 				processedUpdates.addAll(getRejectedProcessor().processUpdates(rejectedUpdates));
 			}
 		}

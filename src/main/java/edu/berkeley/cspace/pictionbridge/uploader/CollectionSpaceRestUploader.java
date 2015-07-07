@@ -42,6 +42,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 	private Credentials credentials;
 	private String servicesUrlTemplate;
 	private UriTemplate mediaRefNameTemplate;
+	private int pauseBetweenUpdatesMillis = 0;
 
 	public CollectionSpaceRestUploader() {
 		
@@ -64,6 +65,12 @@ public class CollectionSpaceRestUploader implements Uploader {
 		for (Update update : updates) {
 			if (send(update)) {
 				sentUpdates.add(update);
+			}
+			
+			try {
+				Thread.sleep(pauseBetweenUpdatesMillis);
+			}
+			catch (InterruptedException e) {
 			}
 		}
 		
@@ -94,7 +101,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 
 		if (collectionObject == null) {
 			logger.error("update " + update.getId() + " failed: could not find collection object with csid " + update.getObjectCsid());
-			return false;			
+			return false;
 		}
 		
 		logger.debug("found collection object for csid " + update.getObjectCsid() + ": " + collectionObject.toString());
@@ -104,7 +111,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		
 		// Synthesize a Media object with just the fields needed to make a relation.
 		// This saves a call to read the full media record from the REST API.
-				
+		
 		Media media = new Media();
 		media.csid = mediaCsid;
 		media.core.uri = "/" + MEDIA_SERVICE_NAME + "/" + mediaCsid;
@@ -129,7 +136,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 
 		if (media == null) {
 			logger.error("update " + update.getId() + " failed: could not find media with csid " + update.getMediaCsid());
-			return false;			
+			return false;
 		}
 		
 		String oldBlobCsid = media.common.blobCsid;
@@ -178,7 +185,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		MultiValueMap<String, Object> form = new LinkedMultiValueMap<String, Object>();
 		form.add("file", new FileSystemResource(binaryFile));
 		
-		URI location = this.restTemplate.postForLocation(getServicesUrlTemplate(), form, BLOB_SERVICE_NAME, null);
+		URI location = restTemplate.postForLocation(getServicesUrlTemplate(), form, BLOB_SERVICE_NAME, null);
 		String csid = uriToCsid(location);
 		
 		logger.info("created blob with csid " + csid);
@@ -189,7 +196,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 	private void deleteBlob(String csid) {
 		logger.debug("deleting blob with csid " + csid);
 
-		this.restTemplate.delete(getServicesUrlTemplate(), BLOB_SERVICE_NAME, csid);		
+		restTemplate.delete(getServicesUrlTemplate(), BLOB_SERVICE_NAME, csid);
 
 		logger.info("deleted blob with csid " + csid);
 	}
@@ -202,7 +209,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		media.common.blobCsid = blobCsid;
 		media.bampfa.imageNumber = imageNumber;
 	
-		URI location = this.restTemplate.postForLocation(getServicesUrlTemplate(), media, MEDIA_SERVICE_NAME, null);
+		URI location = restTemplate.postForLocation(getServicesUrlTemplate(), media, MEDIA_SERVICE_NAME, null);
 		String csid = uriToCsid(location);
 		
 		logger.info("created media with csid " + csid);
@@ -214,7 +221,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		Media media = null;
 		
 		try {
-			media = this.restTemplate.getForObject(getServicesUrlTemplate(), Media.class, MEDIA_SERVICE_NAME, csid);
+			media = restTemplate.getForObject(getServicesUrlTemplate(), Media.class, MEDIA_SERVICE_NAME, csid);
 			media.csid = csid;
 		}
 		catch(HttpClientErrorException e) {
@@ -228,7 +235,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		logger.debug("updating media with csid " + media.csid);
 
 		try {
-			this.restTemplate.put(getServicesUrlTemplate(), media, MEDIA_SERVICE_NAME, media.csid);
+			restTemplate.put(getServicesUrlTemplate(), media, MEDIA_SERVICE_NAME, media.csid);
 		}
 		catch(HttpClientErrorException e) {
 			logger.error("could not update media with csid " + media.csid, e);
@@ -242,7 +249,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		
 		logger.debug("deleting media with csid " + csid);
 
-		this.restTemplate.delete(getServicesUrlTemplate(), MEDIA_SERVICE_NAME, csid);		
+		restTemplate.delete(getServicesUrlTemplate(), MEDIA_SERVICE_NAME, csid);
 
 		logger.info("deleted media with csid " + csid);
 	}
@@ -257,14 +264,14 @@ public class CollectionSpaceRestUploader implements Uploader {
 		relation.common.relationshipType = "affects";
 		relation.common.subjectDocumentType = CollectionObject.DOCTYPE;
 		relation.common.subjectCsid = collectionObject.csid;
-		relation.common.subjectRefName = collectionObject.core.refName;		
+		relation.common.subjectRefName = collectionObject.core.refName;
 		relation.common.subjectUri = collectionObject.core.uri;
 		relation.common.objectDocumentType = Media.DOCTYPE;
 		relation.common.objectCsid = media.csid;
-		relation.common.objectRefName = media.core.refName;		
+		relation.common.objectRefName = media.core.refName;
 		relation.common.objectUri = media.core.uri;
 		
-		URI location = this.restTemplate.postForLocation(getServicesUrlTemplate(), relation, RELATION_SERVICE_NAME, null);
+		URI location = restTemplate.postForLocation(getServicesUrlTemplate(), relation, RELATION_SERVICE_NAME, null);
 		String csid = uriToCsid(location);
 		csids.add(csid);
 		
@@ -275,14 +282,14 @@ public class CollectionSpaceRestUploader implements Uploader {
 		backRelation.common.relationshipType = "affects";
 		backRelation.common.subjectDocumentType = Media.DOCTYPE;
 		backRelation.common.subjectCsid = media.csid;
-		backRelation.common.subjectRefName = media.core.refName;		
+		backRelation.common.subjectRefName = media.core.refName;
 		backRelation.common.subjectUri = media.core.uri;
 		backRelation.common.objectDocumentType = CollectionObject.DOCTYPE;
 		backRelation.common.objectCsid = collectionObject.csid;
-		backRelation.common.objectRefName = collectionObject.core.refName;		
+		backRelation.common.objectRefName = collectionObject.core.refName;
 		backRelation.common.objectUri = collectionObject.core.uri;
 		
-		URI backLocation = this.restTemplate.postForLocation(getServicesUrlTemplate(), backRelation, RELATION_SERVICE_NAME, null);
+		URI backLocation = restTemplate.postForLocation(getServicesUrlTemplate(), backRelation, RELATION_SERVICE_NAME, null);
 		String backCsid = uriToCsid(backLocation); 
 		csids.add(backCsid);
 		
@@ -294,14 +301,14 @@ public class CollectionSpaceRestUploader implements Uploader {
 	private void deleteCollectionObjectMediaRelations(String collectionObjectCsid, String mediaCsid) {
 		logger.debug("deleting relations between collection object " + collectionObjectCsid + " and media " + mediaCsid);
 
-		deleteRelations(collectionObjectCsid, mediaCsid);		
+		deleteRelations(collectionObjectCsid, mediaCsid);
 		deleteRelations(mediaCsid, collectionObjectCsid);
 	}
 
 	private void deleteRelations(String subjectCsid, String objectCsid) {
 		logger.debug("finding relations between cubject " + subjectCsid + " and object " + objectCsid);
 		
-		RelationList relationList = this.restTemplate.getForObject(getServicesUrlTemplate() + RELATION_SEARCH_TEMPLATE, RelationList.class, RELATION_SERVICE_NAME, null, subjectCsid, objectCsid);
+		RelationList relationList = restTemplate.getForObject(getServicesUrlTemplate() + RELATION_SEARCH_TEMPLATE, RelationList.class, RELATION_SERVICE_NAME, null, subjectCsid, objectCsid);
 		List<String> csids = new ArrayList<String>();
 		
 		for (RelationList.Item item : relationList.items) {
@@ -318,7 +325,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 	private void deleteRelation(String csid) {
 		logger.debug("deleting relation with csid " + csid);
 
-		this.restTemplate.delete(getServicesUrlTemplate(), RELATION_SERVICE_NAME, csid);		
+		restTemplate.delete(getServicesUrlTemplate(), RELATION_SERVICE_NAME, csid);
 
 		logger.info("deleted relation with csid " + csid);
 	}
@@ -327,7 +334,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		CollectionObject collectionObject = null;
 		
 		try {
-			collectionObject = this.restTemplate.getForObject(getServicesUrlTemplate(), CollectionObject.class, COLLECTION_OBJECT_SERVICE_NAME, csid);
+			collectionObject = restTemplate.getForObject(getServicesUrlTemplate(), CollectionObject.class, COLLECTION_OBJECT_SERVICE_NAME, csid);
 			collectionObject.csid = csid;
 		}
 		catch(HttpClientErrorException e) {
@@ -390,5 +397,13 @@ public class CollectionSpaceRestUploader implements Uploader {
 
 	public void setMediaRefNameTemplate(String mediaRefNameTemplate) {
 		this.mediaRefNameTemplate = new UriTemplate(mediaRefNameTemplate);
+	}
+
+	public int getPauseBetweenUpdatesMillis() {
+		return pauseBetweenUpdatesMillis;
+	}
+
+	public void setPauseBetweenUpdatesMillis(int pauseBetweenUpdatesMillis) {
+		this.pauseBetweenUpdatesMillis = pauseBetweenUpdatesMillis;
 	}
 }

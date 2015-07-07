@@ -2,17 +2,17 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
-        http://www.springframework.org/schema/beans/spring-beans.xsd">
+		http://www.springframework.org/schema/beans/spring-beans.xsd">
 
 	<!-- PictionBridge looks for beans named updateMonitor and updateProcessor. -->
 	<!-- Make aliases to the desired implementations. -->	
- 	<alias name="databaseUpdateMonitor" alias="updateMonitor" />
- 	<alias name="rootUpdateProcessor" alias="updateProcessor"/>
+	<alias name="databaseUpdateMonitor" alias="updateMonitor" />
+	<alias name="rootUpdateProcessor" alias="updateProcessor"/>
 	
 	<bean id="databaseUpdateMonitor" class="edu.berkeley.cspace.pictionbridge.monitor.DatabaseUpdateMonitor">
 		<!-- The maximum number of updates that may be retrieved at once. -->
 		<!-- Comment this out to retrieve all available updates. -->
-		<property name="limit" value="1"/>
+		<property name="limit" value="1000"/>
 		
 		<!-- The path to a directory where files that need be created will be stored. -->
 		<!-- Extracted binaries will be stored in a subdirectory inside of this directory. -->
@@ -31,7 +31,29 @@
 				<property name="username" value="#{ systemEnvironment['PICTION_BRIDGE_DB_USER'] }" />
 				<property name="password" value="#{ systemEnvironment['PICTION_BRIDGE_DB_PW'] }" />
 			</bean>
-	    </property>
+		</property>
+	</bean>
+	
+	<bean id="cspaceRestUploader" class="edu.berkeley.cspace.pictionbridge.uploader.CollectionSpaceRestUploader">
+		<property name="credentials">
+			<bean class="org.apache.http.auth.UsernamePasswordCredentials">
+				<!-- User -->
+				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_USER'] }" />	
+				<!-- Password -->
+				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_PW'] }" />
+			</bean>
+		</property>
+
+		<property name="servicesUrlTemplate" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/{serviceName}/{csid}"/>
+		<property name="mediaRefNameTemplate" value="urn:cspace:bampfa.cspace.berkeley.edu:media:id({csid})"/>
+	</bean>
+	
+	<bean id="bmuFilenameParser" class="edu.berkeley.cspace.pictionbridge.parser.HttpBatchMediaUploaderFilenameParser">
+		<property name="batchMediaUploader">
+			<bean class="edu.berkeley.cspace.pictionbridge.uploader.HttpBatchMediaUploader">
+				<property name="uploadUrl" value="https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload" />
+			</bean>
+		</property>
 	</bean>
 	
 	<bean id="rootUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.ChainedUpdateProcessor">
@@ -78,13 +100,14 @@
 
 		<property name="acceptedProcessor" ref="postLaunchNewUpdateProcessor"/>
 		<!-- <property name="rejectedProcessor" ref="preLaunchNewUpdateProcessor"/> -->
+		<property name="rejectedProcessor" ref="postLaunchNewUpdateProcessor"/>
 	</bean>
 
  	<bean id="postLaunchNewUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.ChainedUpdateProcessor">
 		<property name="processors">
 			<list>
 				<ref bean="filenameParsingUpdateProcessor"/>
-				<ref bean="uploadingUpdateProcessor"/>
+				<!-- <ref bean="uploadingUpdateProcessor"/> -->
 			</list>
 		</property>
 	</bean>
@@ -93,7 +116,7 @@
 		<property name="monitor" ref="databaseUpdateMonitor"/>
 		
 		<property name="markComplete" value="true"/>
-		<property name="deleteBinary" value="true"/>
+		<property name="deleteBinary" value="false"/>
 		<property name="deleteUpdate" value="false"/>
 	</bean>
 	
@@ -115,27 +138,5 @@
 
 	<bean id="incompleteUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
 		<property name="message" value="update is incomplete"/>
-	</bean>
-	
-	<bean id="cspaceRestUploader" class="edu.berkeley.cspace.pictionbridge.uploader.CollectionSpaceRestUploader">
-		<property name="credentials">
-			<bean class="org.apache.http.auth.UsernamePasswordCredentials">
-				<!-- User -->
-				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_USER'] }" />	
-				<!-- Password -->
-				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_PW'] }" />
-			</bean>
-		</property>
-
-		<property name="servicesUrlTemplate" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/{serviceName}/{csid}"/>
-		<property name="mediaRefNameTemplate" value="urn:cspace:bampfa.cspace.berkeley.edu:media:id({csid})"/>
-	</bean>
-	
-	<bean id="bmuFilenameParser" class="edu.berkeley.cspace.pictionbridge.parser.HttpBatchMediaUploaderFilenameParser">
-		<property name="batchMediaUploader">
-			<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.pictionbridge.uploader.HttpBatchMediaUploader">
-				<property name="uploadUrl" value="https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload" />
-			</bean>		
-		</property>
 	</bean>
 </beans>

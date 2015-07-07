@@ -242,6 +242,10 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 	}
 
 	public void setInterfaceTable(String interfaceTable) {
+		if (!interfaceTable.matches("[A-Za-z][A-Za-z0-9_\\.]*")) {
+			throw new IllegalArgumentException("illegal table name: " + interfaceTable);
+		}
+		
 		this.interfaceTable = interfaceTable;
 	}
 
@@ -253,4 +257,5 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		this.dataSource = dataSource;
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
 	}
+
 }

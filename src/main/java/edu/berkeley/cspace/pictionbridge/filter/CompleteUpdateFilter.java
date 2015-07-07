@@ -24,7 +24,8 @@ public class CompleteUpdateFilter extends AbstractUpdateFilter implements Update
 			update.getAction() != null &&
 			update.getRelationship() != null &&
 			update.getDateTimeAddedToPiction() != null &&
-			update.getDateTimeUploaded() != null
+			update.getDateTimeUploaded() != null &&
+			update.getBinaryFile() != null
 		);
 
 		if (update.getAction() != UpdateAction.NEW) {

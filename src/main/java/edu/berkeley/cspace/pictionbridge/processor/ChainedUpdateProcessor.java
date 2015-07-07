@@ -16,8 +16,12 @@ public class ChainedUpdateProcessor implements UpdateProcessor {
 	public List<Update> processUpdates(List<Update> updates) {
 		logger.info(ChainedUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates with " + getProcessors().size() + " processors");
 
+		int count = 0;
+		
 		for (UpdateProcessor processor : getProcessors()) {
-			logger.info(ChainedUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates with " + processor.getClass().getSimpleName());
+			count++;
+			
+			logger.info(ChainedUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates with processor " + count + " - " + processor.getClass().getSimpleName());
 			
 			updates = processor.processUpdates(updates);
 		}

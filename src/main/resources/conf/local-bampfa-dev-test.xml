@@ -12,11 +12,11 @@
 	<bean id="databaseUpdateMonitor" class="edu.berkeley.cspace.pictionbridge.monitor.DatabaseUpdateMonitor">
 		<!-- The maximum number of updates that may be retrieved at once. -->
 		<!-- Comment this out to retrieve all available updates. -->
-		<property name="limit" value="1000"/>
+		<property name="limit" value="10"/>
 		
 		<!-- The path to a directory where files that need be created will be stored. -->
 		<!-- Extracted binaries will be stored in a subdirectory inside of this directory. -->
-		<property name="workPath" value="#{ systemProperties['pictionBridge.home'] }/work"/>
+		<property name="workPath" value="#{ systemProperties['pictionBridge.home'] }/work/bampfa"/>
 
 		<!-- The name of the table into which Piction sends its updates. -->
 		<property name="interfaceTable" value="piction.piction_interface"/>
@@ -38,7 +38,7 @@
 		<property name="credentials">
 			<bean class="org.apache.http.auth.UsernamePasswordCredentials">
 				<!-- User -->
-				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_USER'] }" />	
+				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_USER'] }" />
 				<!-- Password -->
 				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_PW'] }" />
 			</bean>
@@ -46,6 +46,10 @@
 
 		<property name="servicesUrlTemplate" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/{serviceName}/{csid}"/>
 		<property name="mediaRefNameTemplate" value="urn:cspace:bampfa.cspace.berkeley.edu:media:id({csid})"/>
+	
+		<!-- Time (ms) to pause between uploading each update. Use for throttling. -->
+		<!-- Default: 0 -->
+		<property name="pauseBetweenUpdatesMillis" value="0"/>
 	</bean>
 	
 	<bean id="bmuFilenameParser" class="edu.berkeley.cspace.pictionbridge.parser.HttpBatchMediaUploaderFilenameParser">

@@ -1,4 +1,4 @@
-Pictionbridge updates a UC Berkeley museum's CollectionSpace instance with data sent from the museum's Piction digital asset management system. Updates are pushed by Piction into a database table. Pictionbridge may be periodically run to read updates from that table. It then creates, updates, or deletes records from CollectionSpace as necessary, using CollectionSpace's REST API.
+Pictionbridge updates a UC Berkeley museum's CollectionSpace instance with data sent from the museum's Piction digital asset management system. Updates are pushed by Piction into a database table. Pictionbridge may be run periodically to read updates from that table. It then creates, updates, or deletes records from CollectionSpace as necessary, using CollectionSpace's REST API.
 
 # Development
 
@@ -53,22 +53,15 @@ If none of the required variables are set in the environment, pictionbridge will
 
 ## Configuration Profiles
 
-For the configuration profile named by `$PICTION_BRIDGE_CONF`, the profile's settings may be changed by editing `$PICTION_BRIDGE_HOME/conf/$PICTION_BRIDGE_CONF.xml`. See the existing files for all of the configuration options. Some highlights:
+For the configuration profile named by `$PICTION_BRIDGE_CONF`, the profile's settings may be changed by editing `$PICTION_BRIDGE_HOME/conf/$PICTION_BRIDGE_CONF.xml`. See the existing configuration files for all of the available configuration options. Some highlights:
 
-`databaseUpdateMonitor`:
-  `limit`: The maximum number of updates to retrieve per invocation.
-  
-  `dataSource`
-    `url`: The location of the database to monitor for updates from Piction.
+`databaseUpdateMonitor`/`limit`: The maximum number of updates to retrieve per invocation.
+`databaseUpdateMonitor`/`dataSource`/`url`: The location of the database to monitor for updates from Piction.
 
-`cspaceRestUploader`:
-  `servicesUrlTemplate`: The location of the CollectionSpace services layer REST API.
-  
-  `pauseBetweenUpdatesMillis`: A number of milliseconds to pause between each update to CollectionSpace. This may be used for throttling.
+`cspaceRestUploader`/`servicesUrlTemplate`: The location of the CollectionSpace services layer REST API.
+`cspaceRestUploader`/`pauseBetweenUpdatesMillis`: A number of milliseconds to pause between each update to CollectionSpace. This may be used for throttling.
 
-`bmuFilenameParser`:
-
-  `uploadUrl`: The location of the BMU API, used for parsing filenames.
+`bmuFilenameParser`/`uploadUrl`: The location of the BMU API, used for parsing filenames.
 
 ## Logging
 
@@ -76,6 +69,6 @@ Logging may be configured by editing `$PICTION_BRIDGE_HOME/conf/log4j2.xml`.
 
 # Running
 
-Once installed from the distribution package, the program may be executed by running the script `$PICTION_BRIDGE_HOME\bin\pictionbridge`. The script ensures that the required environment variables are set. If none are set, it attempts to source them from a file named `.pictionbridge` in the running user's home directory.
+Once installed from the distribution package, the program may be executed by running the script `$PICTION_BRIDGE_HOME\bin\pictionbridge`. This script ensures that the required environment variables are set. If none are set, it attempts to source them from a file named `.pictionbridge` in the running user's home directory.
 
 To run during development, see above.

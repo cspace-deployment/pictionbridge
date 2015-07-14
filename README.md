@@ -24,9 +24,7 @@ To install on a server, copy the distribution file (`pictionbridge-[version]-dis
 The following environment variables must be set to run the program:
 
 - `PICTION_BRIDGE_HOME`
-
 The full path to the Pictionbridge installation directory. This is the directory that was created by expanding the distribution file, and contains the `bin`, `conf`, `lib`, `logs`, and `work` subdirectories.
-
 Note: It is not necessary to set this variable when running in development via `mvn exec:java`. Maven will automatically set the installation directory to the `target` directory. If `PICTION_BRIDGE_HOME` is set, it will have no effect.
 
 - `PICTION_BRIDGE_CONF`
@@ -56,7 +54,7 @@ For the configuration profile named by `$PICTION_BRIDGE_CONF`, the profile's set
 - `cspaceRestUploader`/`servicesUrlTemplate`: The location of the CollectionSpace services layer REST API.
 - `cspaceRestUploader`/`pauseBetweenUpdatesMillis`: A number of milliseconds to pause between each update to CollectionSpace. This may be used for throttling.
 
--`bmuFilenameParser`/`uploadUrl`: The location of the BMU API, used for parsing filenames.
+- `bmuFilenameParser`/`uploadUrl`: The location of the BMU API, used for parsing filenames.
 
 ## Logging
 

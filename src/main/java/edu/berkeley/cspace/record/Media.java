@@ -33,6 +33,12 @@ public class Media {
 	public static class BAMPFA {
 		@XmlElement
 		public Integer imageNumber;
+
+		@XmlElement
+		public Boolean primaryDisplay;
+		
+		@XmlElement
+		public String computedOrderNumber;
 	}
 	
 	public static class Core {

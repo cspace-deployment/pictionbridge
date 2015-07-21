@@ -8,7 +8,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import edu.berkeley.cspace.pictionbridge.update.Update;
-import edu.berkeley.cspace.pictionbridge.update.UpdateRelationship;
 import edu.berkeley.cspace.pictionbridge.uploader.HttpBatchMediaUploadResult;
 import edu.berkeley.cspace.pictionbridge.uploader.HttpBatchMediaUploader;
 import edu.berkeley.cspace.pictionbridge.uploader.UploadException;
@@ -50,7 +49,7 @@ public class HttpBatchMediaUploaderFilenameParser implements FilenameParser {
 				logger.debug("parse results for " + update.getFilename() + ": objectnumber=" + image.objectnumber + ", imagenumber=" + image.imagenumber);
 			
 				update.setObjectNumber(image.objectnumber);
-				update.setImageNumber(calculateImageNumber(update, image.imagenumber));
+				update.setImageNumber(image.imagenumber);
 			}
 		}
 	}
@@ -58,26 +57,6 @@ public class HttpBatchMediaUploaderFilenameParser implements FilenameParser {
 	@Override
 	public void parse(Update update) {
 		parse(Arrays.asList(update));
-	}
-
-	private int calculateImageNumber(Update update, Integer parsedImageNumber) {
-		int imageNumber;
-		
-		if (parsedImageNumber == null) {
-			parsedImageNumber = 0;
-		}
-		
-		// Primary images should appear before alternates. Do this by adding
-		// 100 to the parsed image number, if the image is an alternate.
-		
-		if (update.getRelationship() == UpdateRelationship.PRIMARY) {
-			imageNumber = parsedImageNumber;
-		}
-		else {
-			imageNumber = 100 + parsedImageNumber;
-		}
-		
-		return imageNumber;
 	}
 	
 	public HttpBatchMediaUploader getBatchMediaUploader() {

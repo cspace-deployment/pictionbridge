@@ -2,6 +2,6 @@
 .project
 .settings
 setenv.sh
-tunnel.sh
+tunnel*.sh
 target
 *.log

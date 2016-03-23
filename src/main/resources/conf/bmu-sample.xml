@@ -5,6 +5,8 @@
 		http://www.springframework.org/schema/beans/spring-beans.xsd">
 
 	<!-- A sample for configuring the BMU. -->
+	<!-- Note 3/22/2016: This BMU uploader no longer works with the deployed BMU service, and I haven't had time to
+	     figure out why. This is here for posterity. -->
 	
 	<bean id="httpBatchMediaUploader" class="edu.berkeley.cspace.pictionbridge.uploader.HttpBatchMediaUploader">
 		<!-- The URL of the BMU upload endpoint. -->

@@ -22,6 +22,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.berkeley.cspace.pictionbridge.update.Update;
 import edu.berkeley.cspace.pictionbridge.update.UpdateAction;
 
+/* 
+ * Note 3/22/2016: This BMU uploader no longer works with the deployed BMU service, and I haven't had time to
+ * figure out why. This is here for posterity.
+ */
+
 public class HttpBatchMediaUploader implements Uploader {
 	private static final Logger logger = LogManager.getLogger(HttpBatchMediaUploader.class);
 	

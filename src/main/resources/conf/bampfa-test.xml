@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
 		http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-	<!-- PictionBridge looks for beans named updateMonitor and updateProcessor. -->
+	<!-- Pictionbridge looks for beans named updateMonitor and updateProcessor. -->
 	<!-- Make aliases to the desired implementations. -->	
 	<alias name="databaseUpdateMonitor" alias="updateMonitor" />
 	<alias name="rootUpdateProcessor" alias="updateProcessor"/>
@@ -51,8 +51,6 @@
 		<!-- Default: 0 -->
 		<property name="pauseBetweenUpdatesMillis" value="0"/>
 	</bean>
-	
-	<bean id="bampfaFilenameParser" class="edu.berkeley.cspace.pictionbridge.parser.BAMPFAFilenameParser"/>
 	
 	<bean id="rootUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SequentialUpdateProcessor">
 		<property name="processors">
@@ -108,7 +106,9 @@
 	</bean>
 
 	<bean id="filenameParsingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FilenameParsingUpdateProcessor">
-		<property name="filenameParser" ref="bampfaFilenameParser"/>
+		<property name="filenameParser">
+			<bean class="edu.berkeley.cspace.pictionbridge.parser.BAMPFAFilenameParser"/>
+		</property>
 	</bean>
 	
 	<bean id="uploadingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.UploadingUpdateProcessor">

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- Pictionbridge looks for beans named updateMonitor and updateProcessor. -->
+	<!-- Make aliases to the desired implementations. -->	
+	<alias name="databaseUpdateMonitor" alias="updateMonitor" />
+	<alias name="rootUpdateProcessor" alias="updateProcessor"/>
+	
+	<bean id="databaseUpdateMonitor" class="edu.berkeley.cspace.pictionbridge.monitor.DatabaseUpdateMonitor">
+		<!-- The maximum number of updates that may be retrieved at once. -->
+		<!-- Comment this out to retrieve all available updates. -->
+		<property name="limit" value="1"/>
+		
+		<!-- The path to a directory where files that need be created will be stored. -->
+		<!-- Extracted binaries will be stored in a subdirectory inside of this directory. -->
+		<property name="workPath" value="#{ systemProperties['pictionBridge.home'] }/work/bampfa"/>
+
+		<!-- The name of the table into which Piction sends its updates. -->
+		<property name="interfaceTable" value="piction.piction_interface"/>
+
+		<property name="dataSource">
+			<bean class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+				<property name="driverClassName" value="org.postgresql.Driver" />
+
+				<!-- Database connection info. -->
+				<!-- Use systemEnvironment to retrieve environment variables. -->
+				<property name="url" value="jdbc:postgresql://#{ systemEnvironment['PICTION_BRIDGE_DB_HOST'] }:#{ systemEnvironment['PICTION_BRIDGE_DB_PORT'] }/#{ systemEnvironment['PICTION_BRIDGE_DB_NAME'] }?ssl=true&amp;sslfactory=org.postgresql.ssl.NonValidatingFactory" />
+				<property name="username" value="#{ systemEnvironment['PICTION_BRIDGE_DB_USER'] }" />
+				<property name="password" value="#{ systemEnvironment['PICTION_BRIDGE_DB_PW'] }" />
+			</bean>
+		</property>
+	</bean>
+	
+	<bean id="cspaceRestUploader" class="edu.berkeley.cspace.pictionbridge.uploader.CollectionSpaceRestUploader">
+		<property name="credentials">
+			<bean class="org.apache.http.auth.UsernamePasswordCredentials">
+				<!-- User -->
+				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_USER'] }" />
+				<!-- Password -->
+				<constructor-arg value="#{ systemEnvironment['PICTION_BRIDGE_CSPACE_PW'] }" />
+			</bean>
+		</property>
+
+		<property name="servicesUrlTemplate" value="https://#{ systemEnvironment['PICTION_BRIDGE_CSPACE_HOST'] }/cspace-services/{serviceName}/{csid}"/>
+		<property name="mediaRefNameTemplate" value="urn:cspace:bampfa.cspace.berkeley.edu:media:id({csid})"/>
+	
+		<!-- Time (ms) to pause between uploading each update. Use for throttling. -->
+		<!-- Default: 0 -->
+		<property name="pauseBetweenUpdatesMillis" value="0"/>
+	</bean>
+	
+	<bean id="rootUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SequentialUpdateProcessor">
+		<property name="processors">
+			<list>
+				<ref bean="defaultUpdateProcessor"/>
+				<ref bean="postUpdateProcessor"/>
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="defaultUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
+		<property name="filter">
+			<bean class="edu.berkeley.cspace.pictionbridge.filter.CompleteUpdateFilter"/>
+		</property>
+
+		<property name="acceptedProcessor" ref="completeUpdateProcessor"/>
+		
+		<property name="rejectedProcessor">
+			<bean class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
+				<property name="message" value="update is incomplete"/>
+			</bean>
+		</property>
+	</bean>
+	
+ 	<bean id="completeUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
+		<property name="filter">
+			<bean class="edu.berkeley.cspace.pictionbridge.filter.ActionFilter">
+				<property name="acceptActions">
+					<list>
+						<value>NEW</value>
+					</list>
+				</property>
+			</bean>
+		</property>
+
+		<property name="acceptedProcessor" ref="supportedActionProcessor"/>
+		
+		<property name="rejectedProcessor">
+			<bean class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
+				<property name="message" value="update has unsupported action"/>
+			</bean>
+		</property>
+	</bean>
+	
+ 	<bean id="supportedActionProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SequentialUpdateProcessor">
+		<property name="processors">
+			<list>
+				<ref bean="filenameParsingUpdateProcessor"/>
+				<ref bean="uploadingUpdateProcessor"/>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="filenameParsingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FilenameParsingUpdateProcessor">
+		<property name="filenameParser">
+			<bean class="edu.berkeley.cspace.pictionbridge.parser.BAMPFAFilenameParser"/>
+		</property>
+	</bean>
+	
+	<bean id="uploadingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.UploadingUpdateProcessor">
+		<property name="uploader" ref="cspaceRestUploader"/>
+	</bean>
+
+	<bean id="noopUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SkippingUpdateProcessor">
+		<property name="message" value="doing nothing"/>
+	</bean>
+	
+	<bean id="postUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.MonitorManagingUpdateProcessor">
+		<property name="monitor" ref="databaseUpdateMonitor"/>
+		
+		<property name="markComplete" value="true"/>
+		<property name="deleteBinary" value="false"/>
+		<property name="deleteUpdate" value="false"/>
+	</bean>
+</beans>

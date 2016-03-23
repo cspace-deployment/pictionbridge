@@ -108,7 +108,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		logger.debug("found collection object for csid " + update.getObjectCsid() + ": " + collectionObject.toString());
 
 		String blobCsid = createBlob(update.getFilename(), update.getBinaryFile());
-		String mediaCsid = createMedia(update.getFilename(), update.getRelationship(), getImageNumber(update), blobCsid);
+		String mediaCsid = createMedia(update.getFilename(), update.getRelationship(), getImageNumber(update), update.getPictionId(), blobCsid);
 		
 		// Synthesize a Media object with just the fields needed to make a relation.
 		// This saves a call to read the full media record from the REST API.
@@ -202,7 +202,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		logger.info("deleted blob with csid " + csid);
 	}
 	
-	private String createMedia(String title, UpdateRelationship relationship, Integer imageNumber, String blobCsid) {
+	private String createMedia(String title, UpdateRelationship relationship, Integer imageNumber, Integer pictionId, String blobCsid) {
 		boolean isPrimary = (relationship == UpdateRelationship.PRIMARY);
 
 		logger.debug("creating media with title " + title + ", primary=" + isPrimary + ", image number " + imageNumber + ", blob " + blobCsid);
@@ -212,6 +212,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		media.common.blobCsid = blobCsid;
 		media.bampfa.primaryDisplay = isPrimary;
 		media.bampfa.imageNumber = imageNumber;
+		media.bampfa.pictionId = pictionId;
 		media.bampfa.computedOrderNumber = computeOrderNumber(isPrimary, imageNumber);
 	
 		URI location = restTemplate.postForLocation(getServicesUrlTemplate(), media, MEDIA_SERVICE_NAME, null);

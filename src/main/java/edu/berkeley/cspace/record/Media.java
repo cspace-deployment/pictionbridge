@@ -39,6 +39,9 @@ public class Media {
 		
 		@XmlElement
 		public String computedOrderNumber;
+		
+		@XmlElement
+		public Integer pictionId;
 	}
 	
 	public static class Core {

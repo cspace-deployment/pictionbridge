@@ -30,6 +30,8 @@ public class BAMPFAFilenameParser implements FilenameParser {
 	}
 
 	private ParsedFilename parseFilename(String filename) {
+		// This algorithm is copied from the BMU: https://github.com/cspace-deployment/bampfa_project/blob/10c29f40736c6dfcf1fc1f750edceb16bd3b6ffc/uploadmedia/utils.py#L146
+		
 		ParsedFilename parsed = new ParsedFilename();
 		
 		String objectNumber = filename.replace("bampfa_", "");

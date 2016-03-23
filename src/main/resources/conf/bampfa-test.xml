@@ -97,23 +97,7 @@
 		</property>
 	</bean>
 	
-	<bean id="supportedActionProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
-		<property name="filter">
-			<bean class="edu.berkeley.cspace.pictionbridge.filter.DateAddedFilter">
-				<property name="cutoffDate" value="2015-01-01 00:00:00"/>
-			</bean>
-		</property>
-
-		<property name="acceptedProcessor" ref="postLaunchSupportedActionProcessor"/>
-		
-		<property name="rejectedProcessor">
-			<bean class="edu.berkeley.cspace.pictionbridge.processor.SkippingUpdateProcessor">
-				<property name="message" value="new image was added before Piction launch"/>
-			</bean>
-		</property>
-	</bean>
-
- 	<bean id="postLaunchSupportedActionProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SequentialUpdateProcessor">
+ 	<bean id="supportedActionProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SequentialUpdateProcessor">
 		<property name="processors">
 			<list>
 				<ref bean="filenameParsingUpdateProcessor"/>

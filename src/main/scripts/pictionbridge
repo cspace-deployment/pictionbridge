@@ -6,8 +6,15 @@ RESOURCE_FILE=~/.pictionbridge
 
 if [[ (-z $PICTION_BRIDGE_HOME) && 
       (-z $PICTION_BRIDGE_CONF) &&
+      (-z $PICTION_BRIDGE_DB_HOST) &&
+      (-z $PICTION_BRIDGE_DB_PORT) &&
+      (-z $PICTION_BRIDGE_DB_NAME) &&
       (-z $PICTION_BRIDGE_DB_USER) &&
-      (-z $PICTION_BRIDGE_DB_PW) ]]; then
+      (-z $PICTION_BRIDGE_DB_PW) &&
+      (-z $PICTION_BRIDGE_CSPACE_HOST) && 
+      (-z $PICTION_BRIDGE_CSPACE_USER) && 
+      (-z $PICTION_BRIDGE_CSPACE_PW) && 
+      (-z $PICTION_BRIDGE_BMU_HOST) ]]; then
     
     if [ -f $RESOURCE_FILE ]; then
         . $RESOURCE_FILE 
@@ -26,6 +33,21 @@ if [ -z $PICTION_BRIDGE_CONF ]; then
     exit 1
 fi
 
+if [ -z $PICTION_BRIDGE_DB_HOST ]; then
+    echo "Environment variable PICTION_BRIDGE_DB_HOST must be set"
+    exit 1
+fi
+
+if [ -z $PICTION_BRIDGE_DB_PORT ]; then
+    echo "Environment variable PICTION_BRIDGE_DB_PORT must be set"
+    exit 1
+fi
+
+if [ -z $PICTION_BRIDGE_DB_NAME ]; then
+    echo "Environment variable PICTION_BRIDGE_DB_NAME must be set"
+    exit 1
+fi
+
 if [ -z $PICTION_BRIDGE_DB_USER ]; then
     echo "Environment variable PICTION_BRIDGE_DB_USER must be set"
     exit 1
@@ -33,6 +55,26 @@ fi
 
 if [ -z $PICTION_BRIDGE_DB_PW ]; then
     echo "Environment variable PICTION_BRIDGE_DB_PW must be set"
+    exit 1
+fi
+
+if [ -z $PICTION_BRIDGE_CSPACE_HOST ]; then
+    echo "Environment variable PICTION_BRIDGE_CSPACE_HOST must be set"
+    exit 1
+fi
+
+if [ -z $PICTION_BRIDGE_CSPACE_USER ]; then
+    echo "Environment variable PICTION_BRIDGE_CSPACE_USER must be set"
+    exit 1
+fi
+
+if [ -z $PICTION_BRIDGE_CSPACE_PW ]; then
+    echo "Environment variable PICTION_BRIDGE_CSPACE_PW must be set"
+    exit 1
+fi
+
+if [ -z $PICTION_BRIDGE_BMU_HOST]; then
+    echo "Environment variable PICTION_BRIDGE_BMU_HOST must be set"
     exit 1
 fi
 

@@ -24,7 +24,7 @@ public class StandardFilteringUpdateProcessor extends AbstractFilteringUpdatePro
 
 	@Override
 	public List<Update> processUpdates(List<Update> updates) {
-		logger.info(StandardFilteringUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates with filter " + getFilter().getClass().getSimpleName());
+		logger.info(StandardFilteringUpdateProcessor.class.getSimpleName() + " filtering " + updates.size() + " updates with " + getFilter().getClass().getSimpleName());
 		
 		List<Update> processedUpdates = new ArrayList<Update>();
 		

@@ -12,7 +12,7 @@
 	<bean id="databaseUpdateMonitor" class="edu.berkeley.cspace.pictionbridge.monitor.DatabaseUpdateMonitor">
 		<!-- The maximum number of updates that may be retrieved at once. -->
 		<!-- Comment this out to retrieve all available updates. -->
-		<property name="limit" value="20"/>
+		<property name="limit" value="1"/>
 		
 		<!-- The path to a directory where files that need be created will be stored. -->
 		<!-- Extracted binaries will be stored in a subdirectory inside of this directory. -->
@@ -27,7 +27,7 @@
 
 				<!-- Database connection info. -->
 				<!-- Use systemEnvironment to retrieve environment variables. -->
-				<property name="url" value="jdbc:postgresql://dba-postgres-dev-32.ist.berkeley.edu:5113/bampfa_domain_bampfa" />
+				<property name="url" value="jdbc:postgresql://#{ systemEnvironment['PICTION_BRIDGE_DB_HOST'] }:#{ systemEnvironment['PICTION_BRIDGE_DB_PORT'] }/#{ systemEnvironment['PICTION_BRIDGE_DB_NAME'] }?ssl=true&amp;sslfactory=org.postgresql.ssl.NonValidatingFactory" />
 				<property name="username" value="#{ systemEnvironment['PICTION_BRIDGE_DB_USER'] }" />
 				<property name="password" value="#{ systemEnvironment['PICTION_BRIDGE_DB_PW'] }" />
 			</bean>
@@ -44,23 +44,17 @@
 			</bean>
 		</property>
 
-		<property name="servicesUrlTemplate" value="https://bampfa-dev.cspace.berkeley.edu/cspace-services/{serviceName}/{csid}"/>
+		<property name="servicesUrlTemplate" value="https://#{ systemEnvironment['PICTION_BRIDGE_CSPACE_HOST'] }/cspace-services/{serviceName}/{csid}"/>
 		<property name="mediaRefNameTemplate" value="urn:cspace:bampfa.cspace.berkeley.edu:media:id({csid})"/>
 	
 		<!-- Time (ms) to pause between uploading each update. Use for throttling. -->
 		<!-- Default: 0 -->
-		<property name="pauseBetweenUpdatesMillis" value="1000"/>
+		<property name="pauseBetweenUpdatesMillis" value="0"/>
 	</bean>
 	
-	<bean id="bmuFilenameParser" class="edu.berkeley.cspace.pictionbridge.parser.HttpBatchMediaUploaderFilenameParser">
-		<property name="batchMediaUploader">
-			<bean class="edu.berkeley.cspace.pictionbridge.uploader.HttpBatchMediaUploader">
-				<property name="uploadUrl" value="https://dev.cspace.berkeley.edu/bampfaDev_project/uploadmedia/rest/upload" />
-			</bean>
-		</property>
-	</bean>
+	<bean id="bampfaFilenameParser" class="edu.berkeley.cspace.pictionbridge.parser.BAMPFAFilenameParser"/>
 	
-	<bean id="rootUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.ChainedUpdateProcessor">
+	<bean id="rootUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SequentialUpdateProcessor">
 		<property name="processors">
 			<list>
 				<ref bean="batchedUpdateProcessor"/>
@@ -69,7 +63,7 @@
 		</property>
 	</bean>
 	
-	<bean id="batchedUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedUpdateProcessor">		
+	<bean id="batchedUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedUpdateProcessor">
 		<!-- The number of updates to send in a single batch to the batch processor. -->
 		<!-- Multiple batches may be submitted until the available updates are exhausted. -->
 		<!-- Default: 100 -->
@@ -90,27 +84,36 @@
 	
  	<bean id="completeUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
 		<property name="filter">
-			<bean class="edu.berkeley.cspace.pictionbridge.filter.NewUpdateFilter"/>
+			<bean class="edu.berkeley.cspace.pictionbridge.filter.ActionFilter">
+				<property name="acceptActions">
+					<list>
+						<value>NEW</value>
+					</list>
+				</property>
+			</bean>
 		</property>
 
-		<property name="acceptedProcessor" ref="newUpdateProcessor"/>
+		<property name="acceptedProcessor" ref="supportedActionProcessor"/>
 		<property name="rejectedProcessor" ref="unsupportedActionProcessor"/>
 	</bean>
 	
- 	<bean id="newUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
+	<bean id="supportedActionProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
 		<property name="filter">
-			<bean class="edu.berkeley.cspace.pictionbridge.filter.PostLaunchUpdateFilter"/>
+			<bean class="edu.berkeley.cspace.pictionbridge.filter.DateAddedFilter">
+				<property name="cutoffDate" value="2015-01-01 00:00:00"/>
+			</bean>
 		</property>
 
-		<property name="acceptedProcessor" ref="postLaunchNewUpdateProcessor"/>
-		<property name="rejectedProcessor" ref="preLaunchNewUpdateProcessor"/>
+		<property name="acceptedProcessor" ref="postLaunchSupportedActionProcessor"/>
+		<property name="rejectedProcessor" ref="preLaunchProcessor"/>
 	</bean>
 
- 	<bean id="postLaunchNewUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.ChainedUpdateProcessor">
+ 	<bean id="postLaunchSupportedActionProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SequentialUpdateProcessor">
 		<property name="processors">
 			<list>
 				<ref bean="filenameParsingUpdateProcessor"/>
-				<ref bean="uploadingUpdateProcessor"/>
+				<!-- <ref bean="uploadingUpdateProcessor"/> -->
+				<ref bean="noopUpdateProcessor"/>
 			</list>
 		</property>
 	</bean>
@@ -128,10 +131,10 @@
 	</bean>
 	
 	<bean id="filenameParsingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FilenameParsingUpdateProcessor">
-		<property name="filenameParser" ref="bmuFilenameParser"/>
+		<property name="filenameParser" ref="bampfaFilenameParser"/>
 	</bean>
 	
-	<bean id="preLaunchNewUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SkippingUpdateProcessor">
+	<bean id="preLaunchProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SkippingUpdateProcessor">
 		<property name="message" value="new image was added before Piction launch"/>
 	</bean>
 	
@@ -141,5 +144,9 @@
 
 	<bean id="incompleteUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
 		<property name="message" value="update is incomplete"/>
+	</bean>
+
+	<bean id="noopUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SkippingUpdateProcessor">
+		<property name="message" value="doing nothing"/>
 	</bean>
 </beans>

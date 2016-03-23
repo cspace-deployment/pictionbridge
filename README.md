@@ -33,6 +33,18 @@ The following environment variables must be set to run the program:
         
        The name of a configuration profile to use. This should correspond to a file in `$PICTION_BRIDGE_HOME/conf`, but should not have the .xml extension.
 
+- `PICTION_BRIDGE_DB_HOST`
+
+       The hostname of the database server to use to access the table containing updates.
+
+- `PICTION_BRIDGE_DB_PORT`
+
+       The port of the database server to use to access the table containing updates.
+
+- `PICTION_BRIDGE_DB_NAME`
+
+       The name of the database in which to find the table containing updates.
+
 - `PICTION_BRIDGE_DB_USER`
 
        The name of the database user to use to access the table containing updates. This database user must exist, and have appropriate permissions on the table.
@@ -40,6 +52,10 @@ The following environment variables must be set to run the program:
 - `PICTION_BRIDGE_DB_PW`
 
        The password of the `PICTION_BRIDGE_DB_USER` user.
+
+- `PICTION_BRIDGE_CSPACE_HOST`
+
+       The hostname of the CollectionSpace instance.
 
 - `PICTION_BRIDGE_CSPACE_USER`
 

@@ -25,7 +25,7 @@ public class BatchedFilteringUpdateProcessor extends AbstractFilteringUpdateProc
 	
 	@Override
 	public List<Update> processUpdates(List<Update> updates) {
-		logger.info(BatchedFilteringUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates with filter " + getFilter().getClass().getSimpleName());
+		logger.info(BatchedFilteringUpdateProcessor.class.getSimpleName() + " filtering " + updates.size() + " updates with " + getFilter().getClass().getSimpleName());
 		
 		List<Update> rejectedUpdates = getFilter().apply(updates);
 		List<Update> processedUpdates = new ArrayList<Update>();

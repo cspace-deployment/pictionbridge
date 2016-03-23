@@ -7,21 +7,21 @@ import org.apache.logging.log4j.Logger;
 
 import edu.berkeley.cspace.pictionbridge.update.Update;
 
-public class ChainedUpdateProcessor implements UpdateProcessor {
-	private static final Logger logger = LogManager.getLogger(ChainedUpdateProcessor.class);
+public class SequentialUpdateProcessor implements UpdateProcessor {
+	private static final Logger logger = LogManager.getLogger(SequentialUpdateProcessor.class);
 
 	private List<UpdateProcessor> processors;
 	
 	@Override
 	public List<Update> processUpdates(List<Update> updates) {
-		logger.info(ChainedUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates with " + getProcessors().size() + " processors");
+		logger.info(SequentialUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates with " + getProcessors().size() + " processors");
 
 		int count = 0;
 		
 		for (UpdateProcessor processor : getProcessors()) {
 			count++;
 			
-			logger.info(ChainedUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates with processor " + count + " - " + processor.getClass().getSimpleName());
+			logger.info(SequentialUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates with processor " + count + " - " + processor.getClass().getSimpleName());
 			
 			updates = processor.processUpdates(updates);
 		}

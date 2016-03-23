@@ -57,29 +57,24 @@
 	<bean id="rootUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SequentialUpdateProcessor">
 		<property name="processors">
 			<list>
-				<ref bean="batchedUpdateProcessor"/>
+				<ref bean="defaultUpdateProcessor"/>
 				<ref bean="postUpdateProcessor"/>
 			</list>
 		</property>
 	</bean>
 	
-	<bean id="batchedUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedUpdateProcessor">
-		<!-- The number of updates to send in a single batch to the batch processor. -->
-		<!-- Multiple batches may be submitted until the available updates are exhausted. -->
-		<!-- Default: 100 -->
-		<property name="batchSize" value="20"/>	
-		
-		<!-- The update processor to invoke on each batch. -->
-		<property name="batchProcessor" ref="defaultUpdateProcessor"/>
-	</bean>
-		
 	<bean id="defaultUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
 		<property name="filter">
 			<bean class="edu.berkeley.cspace.pictionbridge.filter.CompleteUpdateFilter"/>
 		</property>
 
 		<property name="acceptedProcessor" ref="completeUpdateProcessor"/>
-		<property name="rejectedProcessor" ref="incompleteUpdateProcessor"/>
+		
+		<property name="rejectedProcessor">
+			<bean class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
+				<property name="message" value="update is incomplete"/>
+			</bean>
+		</property>
 	</bean>
 	
  	<bean id="completeUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
@@ -94,7 +89,12 @@
 		</property>
 
 		<property name="acceptedProcessor" ref="supportedActionProcessor"/>
-		<property name="rejectedProcessor" ref="unsupportedActionProcessor"/>
+		
+		<property name="rejectedProcessor">
+			<bean class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
+				<property name="message" value="update has unsupported action"/>
+			</bean>
+		</property>
 	</bean>
 	
 	<bean id="supportedActionProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
@@ -105,7 +105,12 @@
 		</property>
 
 		<property name="acceptedProcessor" ref="postLaunchSupportedActionProcessor"/>
-		<property name="rejectedProcessor" ref="preLaunchProcessor"/>
+		
+		<property name="rejectedProcessor">
+			<bean class="edu.berkeley.cspace.pictionbridge.processor.SkippingUpdateProcessor">
+				<property name="message" value="new image was added before Piction launch"/>
+			</bean>
+		</property>
 	</bean>
 
  	<bean id="postLaunchSupportedActionProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SequentialUpdateProcessor">
@@ -117,6 +122,18 @@
 			</list>
 		</property>
 	</bean>
+
+	<bean id="filenameParsingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FilenameParsingUpdateProcessor">
+		<property name="filenameParser" ref="bampfaFilenameParser"/>
+	</bean>
+	
+	<bean id="uploadingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.UploadingUpdateProcessor">
+		<property name="uploader" ref="cspaceRestUploader"/>
+	</bean>
+
+	<bean id="noopUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SkippingUpdateProcessor">
+		<property name="message" value="doing nothing"/>
+	</bean>
 	
 	<bean id="postUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.MonitorManagingUpdateProcessor">
 		<property name="monitor" ref="databaseUpdateMonitor"/>
@@ -124,29 +141,5 @@
 		<property name="markComplete" value="true"/>
 		<property name="deleteBinary" value="false"/>
 		<property name="deleteUpdate" value="false"/>
-	</bean>
-	
-	<bean id="uploadingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.UploadingUpdateProcessor">
-		<property name="uploader" ref="cspaceRestUploader"/>
-	</bean>
-	
-	<bean id="filenameParsingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FilenameParsingUpdateProcessor">
-		<property name="filenameParser" ref="bampfaFilenameParser"/>
-	</bean>
-	
-	<bean id="preLaunchProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SkippingUpdateProcessor">
-		<property name="message" value="new image was added before Piction launch"/>
-	</bean>
-	
-	<bean id="unsupportedActionProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
-		<property name="message" value="update has unsupported action"/>
-	</bean>
-
-	<bean id="incompleteUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
-		<property name="message" value="update is incomplete"/>
-	</bean>
-
-	<bean id="noopUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SkippingUpdateProcessor">
-		<property name="message" value="doing nothing"/>
 	</bean>
 </beans>

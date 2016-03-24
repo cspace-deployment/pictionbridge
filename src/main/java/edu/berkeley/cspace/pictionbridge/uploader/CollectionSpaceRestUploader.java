@@ -205,7 +205,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 	private String createMedia(String title, UpdateRelationship relationship, Integer imageNumber, Integer pictionId, String blobCsid) {
 		boolean isPrimary = (relationship == UpdateRelationship.PRIMARY);
 
-		logger.debug("creating media with title " + title + ", primary=" + isPrimary + ", image number " + imageNumber + ", blob " + blobCsid);
+		logger.debug("creating media with title=" + title + ", isPrimary=" + isPrimary + ", imageNumber=" + imageNumber + ", blobCsid=" + blobCsid);
 		
 		Media media = new Media();
 		media.common.title = title;

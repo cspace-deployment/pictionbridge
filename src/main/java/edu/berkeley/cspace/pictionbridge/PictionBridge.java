@@ -34,9 +34,9 @@ public class PictionBridge {
 			
 			logger.info("found " + updates.size() + " updates" + (updateMonitor.getLimit() != null ? " (total " + totalCount + ", limited to " + updateMonitor.getLimit() + ")" : ""));
 			
-			List<Update> processedUpdates = updateProcessor.processUpdates(updates);
+			updateProcessor.process(updates);
 			
-			logger.info("processed " + processedUpdates.size() + " updates");
+			logger.info("successfully processed " + updates.size() + " updates");
 			logger.info("exiting");
 		}
 		catch(Exception e) {

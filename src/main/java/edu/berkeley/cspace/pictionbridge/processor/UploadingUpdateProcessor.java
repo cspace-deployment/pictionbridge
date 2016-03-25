@@ -10,28 +10,37 @@ import edu.berkeley.cspace.pictionbridge.update.Update;
 import edu.berkeley.cspace.pictionbridge.uploader.UploadException;
 import edu.berkeley.cspace.pictionbridge.uploader.Uploader;
 
+/**
+ * A processor that uploads updates to CollectionSpace, using an uploader. The uploader must
+ * set the isUploadedToCollectionSpace property to true for each update successfully uploaded.
+ * After attempting the upload, any updates for which isUploadedToCollectionSpace is false are
+ * removed from the list.
+ */
 public class UploadingUpdateProcessor implements UpdateProcessor {
 	private static final Logger logger = LogManager.getLogger(UploadingUpdateProcessor.class);
 
 	private Uploader uploader;
 	
 	@Override
-	public List<Update> processUpdates(List<Update> updates) {
+	public void process(List<Update> updates) {
 		logger.info(UploadingUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates using uploader " + getUploader().getClass().getSimpleName());
 
-		List<Update> uploadedUpdates = null;
-		
 		try {
-			uploadedUpdates = getUploader().send(updates);
+			getUploader().send(updates);
 		} catch (UploadException e) {
-			// Uh oh, we don't know which updates were successful, so assume none were.
-
-			logger.error("error occurred while uploading " + updates.size() + " updates -- an unknown number may have succeeded", e);
-			
-			uploadedUpdates = new ArrayList<Update>();
+			logger.error("error while uploading " + updates.size() + " updates", e);
 		}
 		
-		return uploadedUpdates;
+		List<Update> uploadedUpdates = new ArrayList<Update>();
+		
+		for (Update update : updates) {
+			if (update.isUploadedToCollectionSpace()) {
+				uploadedUpdates.add(update);
+			}
+		}
+		
+		updates.clear();
+		updates.addAll(uploadedUpdates);
 	}
 
 	@Override
@@ -39,10 +48,18 @@ public class UploadingUpdateProcessor implements UpdateProcessor {
 		
 	}
 
+	/**
+	 * @return The uploader to use to send updates.
+	 */
 	public Uploader getUploader() {
 		return uploader;
 	}
 
+	/**
+	 * Sets the uploader to use to send updates.
+	 * 
+	 * @param uploader The uploader.
+	 */
 	public void setUploader(Uploader uploader) {
 		this.uploader = uploader;
 	}

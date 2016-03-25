@@ -27,14 +27,6 @@ public class CompleteUpdateFilter extends AbstractUpdateFilter implements Update
 			update.getDateTimeUploaded() != null &&
 			update.getBinaryFile() != null
 		);
-
-		if (update.getAction() != UpdateAction.NEW) {
-			hasRequiredProperties = (
-				hasRequiredProperties &&
-				StringUtils.isNotEmpty(update.getMediaCsid()) &&
-				StringUtils.isNotEmpty(update.getBlobCsid())
-			);
-		}
 	
 		return hasRequiredProperties;
 	}

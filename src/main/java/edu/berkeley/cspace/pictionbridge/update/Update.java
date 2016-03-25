@@ -22,6 +22,7 @@ public class Update {
 	private File binaryFile;
 	private String objectNumber;
 	private Integer imageNumber;
+	private boolean uploadedToCollectionSpace = false;
 	
 	public Long getId() {
 		return id;
@@ -159,6 +160,14 @@ public class Update {
 		this.imageNumber = imageNumber;
 	}
 
+	public boolean isUploadedToCollectionSpace() {
+		return uploadedToCollectionSpace;
+	}
+
+	public void setUploadedToCollectionSpace(boolean uploadedToCollectionSpace) {
+		this.uploadedToCollectionSpace = uploadedToCollectionSpace;
+	}
+
 	public String toString() {
 		StringBuilder str = new StringBuilder();
 		
@@ -179,6 +188,7 @@ public class Update {
 		str.append("binaryFile: " + (getBinaryFile() != null ? getBinaryFile().getPath() : "") + "\n");
 		str.append("objectNumber: " + Objects.toString(getObjectNumber(), "") + "\n");
 		str.append("imageNumber: " + Objects.toString(getImageNumber(), ""));
+		str.append("uploadedToCollectionSpace: " + Boolean.toString(isUploadedToCollectionSpace()));
 		
 		return str.toString();
 	}

@@ -14,12 +14,10 @@ public class FilenameParsingUpdateProcessor implements UpdateProcessor {
 	private FilenameParser filenameParser;
 
 	@Override
-	public List<Update> processUpdates(List<Update> updates) {
+	public void process(List<Update> updates) {
 		logger.info(FilenameParsingUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates");
 
 		getFilenameParser().parse(updates);
-
-		return updates;
 	}
 
 	@Override

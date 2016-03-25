@@ -60,12 +60,10 @@ public class CollectionSpaceRestUploader implements Uploader {
 	}
 	
 	@Override
-	public List<Update> send(List<Update> updates) throws UploadException {
-		List<Update> sentUpdates = new ArrayList<Update>();
-		
+	public void send(List<Update> updates) throws UploadException {
 		for (Update update : updates) {
 			if (send(update)) {
-				sentUpdates.add(update);
+				update.setUploadedToCollectionSpace(true);
 			}
 			
 			try {
@@ -74,8 +72,6 @@ public class CollectionSpaceRestUploader implements Uploader {
 			catch (InterruptedException e) {
 			}
 		}
-		
-		return sentUpdates;
 	}
 
 	private boolean send(Update update) {

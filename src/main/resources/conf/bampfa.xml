@@ -52,22 +52,23 @@
 		<property name="pauseBetweenUpdatesMillis" value="0"/>
 	</bean>
 	
-	<bean id="rootUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SequentialUpdateProcessor">
+	<bean id="rootUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.CompositeUpdateProcessor">
 		<property name="processors">
 			<list>
-				<ref bean="defaultUpdateProcessor"/>
-				<ref bean="postUpdateProcessor"/>
+				<ref bean="removeIncompleteUpdates"/>
+				<ref bean="removeUnsupportedActions"/>
+				<ref bean="parseFilenames"/>
+				<ref bean="upload"/>
+				<ref bean="markComplete"/>
 			</list>
 		</property>
 	</bean>
 	
-	<bean id="defaultUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
+	<bean id="removeIncompleteUpdates" class="edu.berkeley.cspace.pictionbridge.processor.FilteringUpdateProcessor">
 		<property name="filter">
 			<bean class="edu.berkeley.cspace.pictionbridge.filter.CompleteUpdateFilter"/>
 		</property>
 
-		<property name="acceptedProcessor" ref="completeUpdateProcessor"/>
-		
 		<property name="rejectedProcessor">
 			<bean class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
 				<property name="message" value="update is incomplete"/>
@@ -75,19 +76,19 @@
 		</property>
 	</bean>
 	
- 	<bean id="completeUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.BatchedFilteringUpdateProcessor">
+ 	<bean id="removeUnsupportedActions" class="edu.berkeley.cspace.pictionbridge.processor.FilteringUpdateProcessor">
 		<property name="filter">
 			<bean class="edu.berkeley.cspace.pictionbridge.filter.ActionFilter">
 				<property name="acceptActions">
 					<list>
+						<value>UPDATE</value>
+						<!-- NEW should not be used any more, but if it appears it should be treated like UPDATE. -->
 						<value>NEW</value>
 					</list>
 				</property>
 			</bean>
 		</property>
 
-		<property name="acceptedProcessor" ref="supportedActionProcessor"/>
-		
 		<property name="rejectedProcessor">
 			<bean class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
 				<property name="message" value="update has unsupported action"/>
@@ -95,30 +96,17 @@
 		</property>
 	</bean>
 	
- 	<bean id="supportedActionProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SequentialUpdateProcessor">
-		<property name="processors">
-			<list>
-				<ref bean="filenameParsingUpdateProcessor"/>
-				<ref bean="uploadingUpdateProcessor"/>
-			</list>
-		</property>
-	</bean>
-
-	<bean id="filenameParsingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.FilenameParsingUpdateProcessor">
+	<bean id="parseFilenames" class="edu.berkeley.cspace.pictionbridge.processor.FilenameParsingUpdateProcessor">
 		<property name="filenameParser">
 			<bean class="edu.berkeley.cspace.pictionbridge.parser.BAMPFAFilenameParser"/>
 		</property>
 	</bean>
 	
-	<bean id="uploadingUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.UploadingUpdateProcessor">
+	<bean id="upload" class="edu.berkeley.cspace.pictionbridge.processor.UploadingUpdateProcessor">
 		<property name="uploader" ref="cspaceRestUploader"/>
 	</bean>
 
-	<bean id="noopUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.SkippingUpdateProcessor">
-		<property name="message" value="doing nothing"/>
-	</bean>
-	
-	<bean id="postUpdateProcessor" class="edu.berkeley.cspace.pictionbridge.processor.MonitorManagingUpdateProcessor">
+	<bean id="markComplete" class="edu.berkeley.cspace.pictionbridge.processor.MonitorManagingUpdateProcessor">
 		<property name="monitor" ref="databaseUpdateMonitor"/>
 		
 		<property name="markComplete" value="true"/>

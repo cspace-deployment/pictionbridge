@@ -17,7 +17,7 @@ public class MonitorManagingUpdateProcessor implements UpdateProcessor {
 	private boolean deleteUpdate = false;
 	
 	@Override
-	public List<Update> processUpdates(List<Update> updates) {
+	public void process(List<Update> updates) {
 		logger.info(MonitorManagingUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates with markComplete=" + isMarkComplete() + ", deleteBinary=" + isDeleteBinary() + ", deleteUpdate=" + isDeleteUpdate());
 
 		for (Update update : updates) {
@@ -33,8 +33,6 @@ public class MonitorManagingUpdateProcessor implements UpdateProcessor {
 				getMonitor().deleteUpdate(update);
 			}
 		}
-		
-		return updates;
 	}
 
 	@Override

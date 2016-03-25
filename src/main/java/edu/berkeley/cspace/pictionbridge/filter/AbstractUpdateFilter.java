@@ -5,6 +5,11 @@ import java.util.List;
 
 import edu.berkeley.cspace.pictionbridge.update.Update;
 
+/**
+ * Abstract base class for UpdateFilter implementations.
+ * It is left to subclasses to implement an accept method.
+ *
+ */
 public abstract class AbstractUpdateFilter implements UpdateFilter {
 
 	@Override

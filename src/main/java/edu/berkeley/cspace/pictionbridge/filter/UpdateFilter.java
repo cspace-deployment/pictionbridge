@@ -4,24 +4,29 @@ import java.util.List;
 
 import edu.berkeley.cspace.pictionbridge.update.Update;
 
+
+/**
+ * A filter that removes unacceptable updates from a list.
+ *
+ */
 public interface UpdateFilter {
 	/**
-	 * Filters a list of updates, removing any updates
-	 * that are not accepted by the filter.
+	 * Applies the filter to a list of updates.
 	 * 
-	 * @param updates The updates to filter
-	 * @return        The updates that were removed
-	 *                (not accepted by the filter)
+	 * @param updates The updates to filter. Updates that are not
+	 *                accepted by this filter's test will be
+	 *                removed from the list.
+	 * @return        The updates that were removed (not
+	 *                accepted by this filter's test).
 	 */
 	public List<Update> apply(List<Update> updates);
 	
 	/**
-	 * Tests if a given update should be accepted by the
-	 * filter.
+	 * Tests if an update should be accepted by the filter.
 	 * 
-	 * @param update The update to test
-	 * @return       True, if the update passes the filter,
-	 *               false otherwise
+	 * @param update The update to test.
+	 * @return       True if the update should be accepted by the
+	 *               filter, false otherwise.
 	 */
 	public boolean accept(Update update);
 }

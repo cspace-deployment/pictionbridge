@@ -16,7 +16,7 @@ public class Media {
 	@XmlElement(name="media_common", namespace="http://collectionspace.org/services/media")
 	public Common common = new Common();
 	
-	@XmlElement(name="media_bampfa", namespace="http://collectionspace.org/services/media")
+	@XmlElement(name="media_bampfa", namespace="http://collectionspace.org/services/media/local/bampfa")
 	public BAMPFA bampfa = new BAMPFA();
 
 	@XmlElement(name="collectionspace_core", namespace="http://collectionspace.org/collectionspace_core/")

@@ -19,6 +19,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriTemplate;
 
 import edu.berkeley.cspace.pictionbridge.update.Update;
@@ -26,6 +27,7 @@ import edu.berkeley.cspace.pictionbridge.update.UpdateAction;
 import edu.berkeley.cspace.pictionbridge.update.UpdateRelationship;
 import edu.berkeley.cspace.record.CollectionObject;
 import edu.berkeley.cspace.record.Media;
+import edu.berkeley.cspace.record.RecordList;
 import edu.berkeley.cspace.record.Relation;
 import edu.berkeley.cspace.record.RelationList;
 
@@ -51,7 +53,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 
 	@Override
 	public boolean supportsAction(UpdateAction action) {
-		return true;
+		return (action == UpdateAction.NEW || action == UpdateAction.UPDATE);
 	}
 
 	@Override
@@ -77,17 +79,67 @@ public class CollectionSpaceRestUploader implements Uploader {
 	private boolean send(Update update) {
 		switch(update.getAction()) {
 			case NEW:
-				return doNew(update);
+				// NEW should not be used any more, but if it appears it should be treated like UPDATE.
 			case UPDATE:
-				return doUpdate(update);
+				return doNewOrUpdate(update);
 			case DELETE:
-				return doDelete(update);
+				// DELETE is not currently supported.
+				// return doDelete(update);
 			default:
 				logger.warn("skipping update " +  update.getId() + ": unhandled action " + update.getAction());
 				return false;
 		}
 	}
 	
+	/**
+	 * Handle updates that represent new/updated images.
+	 * 
+	 * @param update The update
+	 * @return       True if successful, false otherwise.
+	 */
+	private boolean doNewOrUpdate(Update update) {
+		// Check for a media record that originated from Piction (has a non-empty pictionId),
+		// and has the same filename (title) as the update.
+		
+		List<Media> existingMedia = this.findMedia(update.getFilename(), true);
+		
+		if (existingMedia.size() > 1) {
+			// More than one existing media record that came from Piction has this filename.
+			// That shouldn't happen, so bail out.
+			
+			logger.error("Found " + existingMedia.size() + " existing Piction media records for filename " + update.getFilename());
+			
+			return false;
+		}
+		
+		if (existingMedia.size() > 0) {
+			// It's an update to an image that's already been pushed from Piction.
+			// Need to set the media and blob csids in the update.
+			
+			Media media = existingMedia.get(0);
+			
+			update.setMediaCsid(media.csid);
+			update.setBlobCsid(media.common.blobCsid);
+
+			logger.debug("Found existing Piction media record for filename " + update.getFilename() + ": csid=" + media.csid + " blobCsid=" + media.common.blobCsid + " pictionId=" + media.bampfa.pictionId);
+
+			return doUpdate(update);
+		}
+		else {
+			// It's a new image (or at least, one that's coming from Piction from the first time).
+			
+			logger.debug("No existing Piction media record found for filename " + update.getFilename());
+
+			return doNew(update);
+		}
+	}
+	
+	/**
+	 * Handle updates that represent new images.
+	 * 
+	 * @param update The update
+	 * @return       True if successful, false otherwise.
+	 */
 	private boolean doNew(Update update) {
 		if (update.getObjectCsid() == null) {
 			logger.warn("skipping update " +  update.getId() + " (" + update.getAction() + "): object csid is null");
@@ -119,24 +171,37 @@ public class CollectionSpaceRestUploader implements Uploader {
 		return true;
 	}
 	
+	/**
+	 * Handle updates that represent updated images.
+	 * 
+	 * @param update The update
+	 * @return       True if successful, false otherwise.
+	 */
 	private boolean doUpdate(Update update) {
 		// Blobs currently can't have their binary updated (CSPACE-6633).
 		// Instead, create a new blob, set the media blobCsid to point
 		// to the new blob, and then delete the old blob.
 		
-		if (update.getMediaCsid() == null) {
-			logger.warn("skipping update " +  update.getId() + " (" + update.getAction() + "): media csid is null");
-			return false;
-		}
-
-		Media media = readMedia(update.getMediaCsid());
-
-		if (media == null) {
-			logger.error("update " + update.getId() + " failed: could not find media with csid " + update.getMediaCsid());
-			return false;
+		String oldBlobCsid = update.getBlobCsid();
+		
+		if (oldBlobCsid == null) {
+			if (update.getMediaCsid() == null) {
+				logger.warn("skipping update " +  update.getId() + " (" + update.getAction() + "): media csid is null");
+			
+				return false;
+			}
+	
+			Media media = readMedia(update.getMediaCsid());
+	
+			if (media == null) {
+				logger.error("update " + update.getId() + " failed: could not find media with csid " + update.getMediaCsid());
+			
+				return false;
+			}
+			
+			oldBlobCsid = media.common.blobCsid;
 		}
 		
-		String oldBlobCsid = media.common.blobCsid;
 		String newBlobCsid = createBlob(update.getFilename(), update.getBinaryFile());
 
 		// Create a sparse media update.
@@ -154,6 +219,15 @@ public class CollectionSpaceRestUploader implements Uploader {
 		return true;
 	}
 	
+	/**
+	 * Handle updates that represent deletions.
+	 * 
+	 * This is a first pass that won't work in production, because we are not supplied the media csid and
+	 * blob csid. Need to get these from a search in order for this code to work.
+	 * 
+	 * @param update The update
+	 * @return       True if successful, false otherwise.
+	 */
 	private boolean doDelete(Update update) {
 		if (update.getBlobCsid() == null) {
 			logger.warn("skipping update " +  update.getId() + " (" + update.getAction() + "): blob csid is null");
@@ -175,7 +249,40 @@ public class CollectionSpaceRestUploader implements Uploader {
 		
 		return true;
 	}
+	
+	private List<Media> findMedia(String filename, boolean hasPictionId) {
+		List<Media> found = new ArrayList<Media>();
 		
+		String searchQuery = "(media_common:title=\"" + nxqlEscapeString(filename) + "\")";
+		
+		String url = UriComponentsBuilder.fromUriString(getServicesUrlTemplate())
+			.queryParam("as", searchQuery)
+			.queryParam("pgSz", 0)
+			.build()
+			.toString();
+		
+		logger.debug("Finding media with url=" + url);
+		
+		RecordList recordList = restTemplate.getForObject(url, RecordList.class, MEDIA_SERVICE_NAME, null);
+		
+		if (recordList.totalItems > 0) {
+			for (RecordList.Item item : recordList.items) {
+				Media candidateMedia = readMedia(item.csid);
+				boolean candidateHasPictionId = (candidateMedia.bampfa.pictionId != null);
+
+				if (candidateHasPictionId == hasPictionId) {
+					found.add(candidateMedia);
+				}
+			}
+		}
+		
+		return found;
+	}
+	
+	private String nxqlEscapeString(String s) {
+		return s.replace("\\", "\\\\").replace("\"", "\\\"");
+	}
+	
 	private String createBlob(String filename, File binaryFile) {
 		logger.debug("creating blob for file " + filename + " with content " + binaryFile.getAbsolutePath());
 		

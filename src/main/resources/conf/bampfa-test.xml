@@ -58,7 +58,7 @@
 				<ref bean="removeIncompleteUpdates"/>
 				<ref bean="removeUnsupportedActions"/>
 				<ref bean="parseFilenames"/>
-				<ref bean="fakeUpload"/>
+				<ref bean="upload"/>
 				<ref bean="markComplete"/>
 			</list>
 		</property>

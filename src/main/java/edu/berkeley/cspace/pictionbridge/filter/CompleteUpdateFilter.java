@@ -3,7 +3,6 @@ package edu.berkeley.cspace.pictionbridge.filter;
 import org.apache.commons.lang3.StringUtils;
 
 import edu.berkeley.cspace.pictionbridge.update.Update;
-import edu.berkeley.cspace.pictionbridge.update.UpdateAction;
 
 /**
  * A filter that accepts complete updates.

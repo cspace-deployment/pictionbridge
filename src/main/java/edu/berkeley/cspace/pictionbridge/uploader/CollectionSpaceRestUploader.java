@@ -92,7 +92,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 	}
 	
 	/**
-	 * Handle updates that represent new/updated images.
+	 * Handles updates that represent new/updated images.
 	 * 
 	 * @param update The update
 	 * @return       True if successful, false otherwise.
@@ -133,7 +133,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 	}
 	
 	/**
-	 * Handle updates that represent new images.
+	 * Handles updates that represent new images.
 	 * 
 	 * @param update The update
 	 * @return       True if successful, false otherwise.
@@ -166,11 +166,15 @@ public class CollectionSpaceRestUploader implements Uploader {
 		
 		createRelations(collectionObject, media);
 		
+		// Delete any non-Piction media records with the same filename.
+		
+		deleteMediaNotFromPiction(update.getFilename());
+
 		return true;
 	}
 	
 	/**
-	 * Handle updates that represent updated images.
+	 * Handles updates that represent updated images.
 	 * 
 	 * @param update The update
 	 * @return       True if successful, false otherwise.
@@ -214,6 +218,10 @@ public class CollectionSpaceRestUploader implements Uploader {
 		// Delete the previous blob.
 		
 		deleteBlob(oldBlobCsid);
+		
+		// Delete any non-Piction media records with the same filename.
+		
+		deleteMediaNotFromPiction(update.getFilename());
 		
 		return true;
 	}
@@ -397,6 +405,19 @@ public class CollectionSpaceRestUploader implements Uploader {
 		restTemplate.delete(getServicesUrlTemplate(), MEDIA_SERVICE_NAME, csid);
 
 		logger.info("deleted media with csid " + csid);
+	}
+	
+	/**
+	 * Deletes media records that have a given filename, and did not originate from Piction.
+	 * 
+	 * @param filename The filename
+	 */
+	private void deleteMediaNotFromPiction(String filename) {
+		List<Media> mediaList = findMediaNotFromPiction(filename);
+		
+		for (Media media : mediaList) {
+			deleteMedia(media.csid);
+		}
 	}
 	
 	private List<String> createRelations(CollectionObject collectionObject, Media media) {

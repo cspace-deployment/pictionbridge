@@ -98,10 +98,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 	 * @return       True if successful, false otherwise.
 	 */
 	private boolean doNewOrUpdate(Update update) {
-		// Check for a media record that originated from Piction (has a non-empty pictionId),
-		// and has the same filename (title) as the update.
-		
-		List<Media> existingMedia = this.findMedia(update.getFilename(), true);
+		List<Media> existingMedia = findMediaFromPiction(update.getFilename());
 		
 		if (existingMedia.size() > 1) {
 			// More than one existing media record that came from Piction has this filename.
@@ -114,7 +111,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		
 		if (existingMedia.size() > 0) {
 			// It's an update to an image that's already been pushed from Piction.
-			// Need to set the media and blob csids in the update.
+			// Set the media and blob csids in the update, and dispatch to doUpdate.
 			
 			Media media = existingMedia.get(0);
 			
@@ -127,6 +124,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		}
 		else {
 			// It's a new image (or at least, one that's coming from Piction from the first time).
+			// Dispatch to doNew.
 			
 			logger.debug("No existing Piction media record found for filename " + update.getFilename());
 
@@ -209,6 +207,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		Media newMedia = new Media();
 		newMedia.csid = update.getMediaCsid();
 		newMedia.common.blobCsid = newBlobCsid;
+		newMedia.bampfa.pictionId = update.getPictionId();
 		
 		updateMedia(newMedia);
 		
@@ -250,8 +249,28 @@ public class CollectionSpaceRestUploader implements Uploader {
 		return true;
 	}
 	
-	private List<Media> findMedia(String filename, boolean hasPictionId) {
+	private List<Media> findMediaFromPiction(String filename) {
+		return findMedia(filename, true);
+	}
+
+	private List<Media> findMediaNotFromPiction(String filename) {
+		return findMedia(filename, false);
+	}
+
+	/**
+	 * Find media records by filename. 
+	 * 
+	 * @param filename      The filename
+	 * @param isFromPiction If true, return only media records that originated from Piction.
+	 *                      If false, return only media records that did not originate from Piction.
+	 *                      If null, return all media records with the filename.
+	 * @return              The matching media records. If no media records match,
+	 *                      an empty list is returned.
+	 */
+	private List<Media> findMedia(String filename, Boolean isFromPiction) {
 		List<Media> found = new ArrayList<Media>();
+		
+		// The filename is stored in the title for BAMPFA.
 		
 		String searchQuery = "(media_common:title=\"" + nxqlEscapeString(filename) + "\")";
 		
@@ -261,16 +280,23 @@ public class CollectionSpaceRestUploader implements Uploader {
 			.build()
 			.toString();
 		
-		logger.debug("Finding media with url=" + url);
+		logger.debug("Finding media: url=" + url);
 		
 		RecordList recordList = restTemplate.getForObject(url, RecordList.class, MEDIA_SERVICE_NAME, null);
 		
 		if (recordList.totalItems > 0) {
 			for (RecordList.Item item : recordList.items) {
 				Media candidateMedia = readMedia(item.csid);
-				boolean candidateHasPictionId = (candidateMedia.bampfa.pictionId != null);
-
-				if (candidateHasPictionId == hasPictionId) {
+				boolean isMatch = true;
+				
+				if (isFromPiction != null) {
+					// A media record originated from Piction if it has a non-null pictionId.
+					
+					boolean candidateIsFromPiction = (candidateMedia.bampfa.pictionId != null);
+					isMatch = (candidateIsFromPiction == isFromPiction);
+				}
+				
+				if (isMatch) {
 					found.add(candidateMedia);
 				}
 			}

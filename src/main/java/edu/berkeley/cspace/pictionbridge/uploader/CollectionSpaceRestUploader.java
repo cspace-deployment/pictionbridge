@@ -118,7 +118,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 			update.setMediaCsid(media.csid);
 			update.setBlobCsid(media.common.blobCsid);
 
-			logger.debug("Found existing Piction media record for filename " + update.getFilename() + ": csid=" + media.csid + " blobCsid=" + media.common.blobCsid + " pictionId=" + media.bampfa.pictionId);
+			logger.debug("found existing Piction media record for filename " + update.getFilename() + ": csid=" + media.csid + " blobCsid=" + media.common.blobCsid + " pictionId=" + media.bampfa.pictionId);
 
 			return doUpdate(update);
 		}
@@ -126,7 +126,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 			// It's a new image (or at least, one that's coming from Piction from the first time).
 			// Dispatch to doNew.
 			
-			logger.debug("No existing Piction media record found for filename " + update.getFilename());
+			logger.debug("no existing Piction media record found for filename " + update.getFilename());
 
 			return doNew(update);
 		}
@@ -284,11 +284,12 @@ public class CollectionSpaceRestUploader implements Uploader {
 		
 		String url = UriComponentsBuilder.fromUriString(getServicesUrlTemplate())
 			.queryParam("as", searchQuery)
+			.queryParam("wf_deleted", "false")
 			.queryParam("pgSz", 0)
 			.build()
 			.toString();
 		
-		logger.debug("Finding media: url=" + url);
+		logger.debug("finding media: url=" + url);
 		
 		RecordList recordList = restTemplate.getForObject(url, RecordList.class, MEDIA_SERVICE_NAME, null);
 		
@@ -415,8 +416,12 @@ public class CollectionSpaceRestUploader implements Uploader {
 	private void deleteMediaNotFromPiction(String filename) {
 		List<Media> mediaList = findMediaNotFromPiction(filename);
 		
-		for (Media media : mediaList) {
-			deleteMedia(media.csid);
+		if (mediaList.size() > 0) {
+			logger.info("found " + mediaList.size() + " media records that did not originate from Piction");
+			
+			for (Media media : mediaList) {
+				deleteMedia(media.csid);
+			}
 		}
 	}
 	

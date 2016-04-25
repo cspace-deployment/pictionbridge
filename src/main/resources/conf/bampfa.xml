@@ -57,6 +57,7 @@
 			<list>
 				<ref bean="removeIncompleteUpdates"/>
 				<ref bean="removeUnsupportedActions"/>
+				<ref bean="removeUnverifiedHashes"/>
 				<ref bean="parseFilenames"/>
 				<ref bean="upload"/>
 				<ref bean="markComplete"/>
@@ -92,6 +93,18 @@
 		<property name="rejectedProcessor">
 			<bean class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
 				<property name="message" value="update has unsupported action"/>
+			</bean>
+		</property>
+	</bean>
+	
+	<bean id="removeUnverifiedHashes" class="edu.berkeley.cspace.pictionbridge.processor.FilteringUpdateProcessor">
+		<property name="filter">
+			<bean class="edu.berkeley.cspace.pictionbridge.filter.HashFilter"/>
+		</property>
+
+		<property name="rejectedProcessor">
+			<bean class="edu.berkeley.cspace.pictionbridge.processor.FailingUpdateProcessor">
+				<property name="message" value="update failed hash verification"/>
 			</bean>
 		</property>
 	</bean>

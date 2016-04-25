@@ -20,6 +20,7 @@ public class Update {
 	private Timestamp dateTimeAddedToPiction;
 	private Timestamp dateTimeUploaded;
 	private File binaryFile;
+	private String hash;
 	private String objectNumber;
 	private Integer imageNumber;
 	private boolean uploadedToCollectionSpace = false;
@@ -144,6 +145,14 @@ public class Update {
 		this.binaryFile = binaryFile;
 	}
 
+	public String getHash() {
+		return hash;
+	}
+
+	public void setHash(String hash) {
+		this.hash = hash;
+	}
+
 	public String getObjectNumber() {
 		return objectNumber;
 	}
@@ -186,8 +195,9 @@ public class Update {
 		str.append("dateTimeAddedToPiction: " + Objects.toString(getDateTimeAddedToPiction(), "") + "\n");
 		str.append("dateTimeUploaded: " + Objects.toString(getDateTimeUploaded(), "") + "\n");
 		str.append("binaryFile: " + (getBinaryFile() != null ? getBinaryFile().getPath() : "") + "\n");
+		str.append("hash: " + Objects.toString(getHash(), "") + "\n");
 		str.append("objectNumber: " + Objects.toString(getObjectNumber(), "") + "\n");
-		str.append("imageNumber: " + Objects.toString(getImageNumber(), ""));
+		str.append("imageNumber: " + Objects.toString(getImageNumber(), "") + "\n");
 		str.append("uploadedToCollectionSpace: " + Boolean.toString(isUploadedToCollectionSpace()));
 		
 		return str.toString();

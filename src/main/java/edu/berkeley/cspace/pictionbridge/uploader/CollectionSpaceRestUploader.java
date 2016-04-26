@@ -98,6 +98,8 @@ public class CollectionSpaceRestUploader implements Uploader {
 	 * @return       True if successful, false otherwise.
 	 */
 	private boolean doNewOrUpdate(Update update) {
+		logger.info("checking for existing media records from Piction with filename " + update.getFilename());
+		
 		List<Media> existingMedia = findMediaFromPiction(update.getFilename());
 		
 		if (existingMedia.size() > 1) {
@@ -414,6 +416,8 @@ public class CollectionSpaceRestUploader implements Uploader {
 	 * @param filename The filename
 	 */
 	private void deleteMediaNotFromPiction(String filename) {
+		logger.info("checking for media not from Piction with filename " + filename);
+		
 		List<Media> mediaList = findMediaNotFromPiction(filename);
 		
 		if (mediaList.size() > 0) {

@@ -12,7 +12,7 @@
 	<bean id="databaseUpdateMonitor" class="edu.berkeley.cspace.pictionbridge.monitor.DatabaseUpdateMonitor">
 		<!-- The maximum number of updates that may be retrieved at once. -->
 		<!-- Comment this out to retrieve all available updates. -->
-		<property name="limit" value="100"/>
+		<property name="limit" value="500"/>
 		
 		<!-- The path to a directory where files that need be created will be stored. -->
 		<!-- Extracted binaries will be stored in a subdirectory inside of this directory. -->

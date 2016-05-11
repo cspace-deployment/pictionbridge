@@ -155,8 +155,9 @@ public class CollectionSpaceRestUploader implements Uploader {
 		
 		logger.debug("found collection object for csid " + update.getObjectCsid() + ": " + collectionObject.toString());
 
-		String blobCsid = createBlob(update.getFilename(), update.getBinaryFile());
-		String mediaCsid = createMedia(update.getFilename(), update.getRelationship(), getImageNumber(update), update.getPictionId(), blobCsid);
+		update.setBlobCsid(createBlob(update.getFilename(), update.getBinaryFile()));
+
+		String mediaCsid = createMedia(update);
 		
 		// Synthesize a Media object with just the fields needed to make a relation.
 		// This saves a call to read the full media record from the REST API.
@@ -206,16 +207,12 @@ public class CollectionSpaceRestUploader implements Uploader {
 			oldBlobCsid = media.common.blobCsid;
 		}
 		
-		String newBlobCsid = createBlob(update.getFilename(), update.getBinaryFile());
+		update.setBlobCsid(createBlob(update.getFilename(), update.getBinaryFile()));
 
 		// Create a sparse media update.
 		
-		Media newMedia = new Media();
-		newMedia.csid = update.getMediaCsid();
-		newMedia.common.blobCsid = newBlobCsid;
-		newMedia.bampfa.pictionId = update.getPictionId();
-		
-		updateMedia(newMedia);
+		Media media = createMediaFromUpdate(update);
+		updateMedia(media);
 		
 		// Delete the previous blob.
 		
@@ -342,25 +339,36 @@ public class CollectionSpaceRestUploader implements Uploader {
 		logger.info("deleted blob with csid " + csid);
 	}
 	
-	private String createMedia(String title, UpdateRelationship relationship, Integer imageNumber, Integer pictionId, String blobCsid) {
-		boolean isPrimary = (relationship == UpdateRelationship.PRIMARY);
-
-		logger.debug("creating media with title=" + title + ", isPrimary=" + isPrimary + ", imageNumber=" + imageNumber + ", blobCsid=" + blobCsid);
+	private String createMedia(Update update) {
+		logger.debug("creating media");
 		
-		Media media = new Media();
-		media.common.title = title;
-		media.common.blobCsid = blobCsid;
-		media.bampfa.primaryDisplay = isPrimary;
-		media.bampfa.imageNumber = imageNumber;
-		media.bampfa.pictionId = pictionId;
-		media.bampfa.computedOrderNumber = computeOrderNumber(isPrimary, imageNumber);
-	
+		Media media = createMediaFromUpdate(update);
+		
 		URI location = restTemplate.postForLocation(getServicesUrlTemplate(), media, MEDIA_SERVICE_NAME, null);
 		String csid = uriToCsid(location);
 		
 		logger.info("created media with csid " + csid);
 
 		return csid;
+	}
+	
+	private Media createMediaFromUpdate(Update update) {
+		Media media = new Media();
+		
+		String title = update.getFilename();
+		boolean isPrimary = (update.getRelationship() == UpdateRelationship.PRIMARY);
+
+		logger.debug("media csid=" + update.getMediaCsid() + ", title=" + title + ", primaryDisplay=" + isPrimary + ", imageNumber=" + update.getImageNumber() + ", blobCsid=" + update.getBlobCsid());
+
+		media.csid = update.getMediaCsid();
+		media.common.title = title;
+		media.common.blobCsid = update.getBlobCsid();
+		media.bampfa.primaryDisplay = isPrimary;
+		media.bampfa.imageNumber = update.getImageNumber();
+		media.bampfa.pictionId = update.getPictionId();
+		media.bampfa.computedOrderNumber = computeOrderNumber(isPrimary, update.getImageNumber());
+		
+		return media;
 	}
 	
 	private String computeOrderNumber(boolean isPrimary, Integer imageNumber) {
@@ -468,7 +476,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		String backCsid = uriToCsid(backLocation); 
 		csids.add(backCsid);
 		
-		logger.info("created relation with csid " + csid);
+		logger.info("created relation with csid " + backCsid);
 		
 		return csids;
 	}

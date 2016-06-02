@@ -23,6 +23,7 @@ public class Update {
 	private String hash;
 	private String objectNumber;
 	private Integer imageNumber;
+	private String websiteDisplayLevel;
 	private boolean uploadedToCollectionSpace = false;
 	
 	public Long getId() {
@@ -169,6 +170,14 @@ public class Update {
 		this.imageNumber = imageNumber;
 	}
 
+	public String getWebsiteDisplayLevel() {
+		return websiteDisplayLevel;
+	}
+
+	public void setWebsiteDisplayLevel(String websiteDisplayLevel) {
+		this.websiteDisplayLevel = websiteDisplayLevel;
+	}
+
 	public boolean isUploadedToCollectionSpace() {
 		return uploadedToCollectionSpace;
 	}
@@ -198,6 +207,7 @@ public class Update {
 		str.append("hash: " + Objects.toString(getHash(), "") + "\n");
 		str.append("objectNumber: " + Objects.toString(getObjectNumber(), "") + "\n");
 		str.append("imageNumber: " + Objects.toString(getImageNumber(), "") + "\n");
+		str.append("websiteDisplayLevel: " + Objects.toString(getWebsiteDisplayLevel(), "") + "\n");
 		str.append("uploadedToCollectionSpace: " + Boolean.toString(isUploadedToCollectionSpace()));
 		
 		return str.toString();

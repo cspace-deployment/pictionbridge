@@ -42,6 +42,12 @@ public class Media {
 		
 		@XmlElement
 		public Integer pictionId;
+
+		@XmlElement
+		public String pictionImageHash;
+
+		@XmlElement
+		public String websiteDisplayLevel;
 	}
 	
 	public static class Core {

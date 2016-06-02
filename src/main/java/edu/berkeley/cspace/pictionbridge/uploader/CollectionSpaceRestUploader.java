@@ -116,12 +116,20 @@ public class CollectionSpaceRestUploader implements Uploader {
 			// Set the media and blob csids in the update, and dispatch to doUpdate.
 			
 			Media media = existingMedia.get(0);
-			
+
 			update.setMediaCsid(media.csid);
 			update.setBlobCsid(media.common.blobCsid);
 
 			logger.debug("found existing Piction media record for filename " + update.getFilename() + ": csid=" + media.csid + " blobCsid=" + media.common.blobCsid + " pictionId=" + media.bampfa.pictionId);
 
+			String existingImageHash = media.bampfa.pictionImageHash;
+
+			if (existingImageHash != null && existingImageHash.equals(update.getHash())) {
+				logger.debug("existing image hash " + existingImageHash + " is equal to the update hash -- performing metadata update only");
+				
+				return doMetadataUpdate(update);
+			}
+			
 			return doUpdate(update);
 		}
 		else {
@@ -176,6 +184,21 @@ public class CollectionSpaceRestUploader implements Uploader {
 		return true;
 	}
 	
+	/**
+	 * Handles updates that represent updated image metadata (but not updated image content).
+	 * 
+	 * @param update The update
+	 * @return       True if successful, false otherwise.
+	 */
+	private boolean doMetadataUpdate(Update update) {
+		// Create a sparse media update.
+		
+		Media media = createMediaFromUpdate(update);
+		updateMedia(media);
+		
+		return true;
+	}
+
 	/**
 	 * Handles updates that represent updated images.
 	 * 
@@ -288,7 +311,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 			.build()
 			.toString();
 		
-		logger.debug("finding media: url=" + url);
+		logger.debug("finding media: url=" + url + " isFromPiction=" + isFromPiction);
 		
 		RecordList recordList = restTemplate.getForObject(url, RecordList.class, MEDIA_SERVICE_NAME, null);
 		
@@ -358,17 +381,40 @@ public class CollectionSpaceRestUploader implements Uploader {
 		String title = update.getFilename();
 		boolean isPrimary = (update.getRelationship() == UpdateRelationship.PRIMARY);
 
-		logger.debug("media csid=" + update.getMediaCsid() + ", title=" + title + ", primaryDisplay=" + isPrimary + ", imageNumber=" + update.getImageNumber() + ", blobCsid=" + update.getBlobCsid());
-
 		media.csid = update.getMediaCsid();
 		media.common.title = title;
 		media.common.blobCsid = update.getBlobCsid();
 		media.bampfa.primaryDisplay = isPrimary;
 		media.bampfa.imageNumber = update.getImageNumber();
 		media.bampfa.pictionId = update.getPictionId();
+		media.bampfa.pictionImageHash = update.getHash();
 		media.bampfa.computedOrderNumber = computeOrderNumber(isPrimary, update.getImageNumber());
-		
+		media.bampfa.websiteDisplayLevel = normalizeWebsiteDisplayLevel(update.getWebsiteDisplayLevel());
+
+		logger.debug("media csid=" + media.csid + ", title=" + media.common.title + ", primaryDisplay=" + media.bampfa.primaryDisplay + ", imageNumber=" + media.bampfa.imageNumber + ", websiteDisplayLevel=" + media.bampfa.websiteDisplayLevel + ", blobCsid=" + media.common.blobCsid);
+
 		return media;
+	}
+	
+	private String normalizeWebsiteDisplayLevel(String websiteDisplayLevel) {
+		String normalized;
+		
+		switch (websiteDisplayLevel.toLowerCase()) {
+			case "display thumbnail only":
+			case "display thumbnails only":
+				normalized = "Display thumbnail only";
+				break;
+			case "no public display":
+				normalized = "No public display";
+				break;
+			case "display larger size":
+				normalized = "Display larger size";
+				break;
+			default:
+				normalized = websiteDisplayLevel;
+		}
+		
+		return normalized;
 	}
 	
 	private String computeOrderNumber(boolean isPrimary, Integer imageNumber) {

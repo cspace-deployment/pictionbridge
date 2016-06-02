@@ -62,7 +62,7 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 	@Override
 	public List<Update> getUpdates() {
 		Integer limit = getLimit();
-		String sql = "SELECT id, piction_id, filename, mimetype, img_size, img_height, img_width, object_csid, action, relationship, dt_addedtopiction, dt_uploaded, bimage, sha1_hash FROM " + getInterfaceTable() + " WHERE dt_processed IS NULL ORDER BY dt_uploaded";
+		String sql = "SELECT id, piction_id, filename, mimetype, img_size, img_height, img_width, object_csid, action, relationship, dt_addedtopiction, dt_uploaded, bimage, sha1_hash, website_display_level FROM " + getInterfaceTable() + " WHERE dt_processed IS NULL ORDER BY dt_uploaded";
 		
 		if (limit != null) {
 			sql += " LIMIT " + limit.toString();
@@ -113,6 +113,7 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 					update.setDateTimeUploaded(results.getTimestamp(12));
 					update.setBinaryFile(extractBinary(results.getBinaryStream(13), update));
 					update.setHash(results.getString(14));
+					update.setWebsiteDisplayLevel(results.getString(15));
 					
 					logger.info("found update\n" + update.toString());
 					

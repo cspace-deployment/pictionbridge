@@ -21,6 +21,9 @@
 		<!-- The name of the table into which Piction sends its updates. -->
 		<property name="interfaceTable" value="piction.piction_interface"/>
 
+		<!-- The name of the log table. -->
+		<property name="logTable" value="piction.piction_history"/>
+		
 		<property name="dataSource">
 			<bean class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
 				<property name="driverClassName" value="org.postgresql.Driver" />
@@ -128,6 +131,7 @@
 		
 		<property name="markComplete" value="true"/>
 		<property name="deleteBinary" value="false"/>
+		<property name="logUpdate" value="true"/>
 		<property name="deleteUpdate" value="false"/>
 	</bean>
 </beans>

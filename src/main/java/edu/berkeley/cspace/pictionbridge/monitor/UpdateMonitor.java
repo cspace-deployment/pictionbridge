@@ -12,6 +12,7 @@ public interface UpdateMonitor {
 	public void markUpdateComplete(Update update);
 	public void deleteBinary(Update update);
 	public void deleteUpdate(Update update);
+	public void logUpdate(Update update);
 	
 	public Integer getLimit();
 	public void setLimit(Integer limit);

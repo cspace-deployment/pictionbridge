@@ -31,6 +31,7 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 	private Integer limit;
 	private String workPath;
 	private String interfaceTable;
+	private String logTable;
 	
 	private DataSource dataSource;
 	private JdbcTemplate jdbcTemplate;
@@ -62,7 +63,7 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 	@Override
 	public List<Update> getUpdates() {
 		Integer limit = getLimit();
-		String sql = "SELECT id, piction_id, filename, mimetype, img_size, img_height, img_width, object_csid, action, relationship, dt_addedtopiction, dt_uploaded, bimage, sha1_hash, website_display_level FROM " + getInterfaceTable() + " WHERE dt_processed IS NULL ORDER BY dt_uploaded";
+		String sql = "SELECT id, piction_id, filename, mimetype, img_size, img_height, img_width, object_csid, action, relationship, dt_addedtopiction, dt_uploaded, bimage, sha1_hash, website_display_level FROM " + getInterfaceTable() + " WHERE (dt_uploaded > dt_processed) OR (dt_processed IS NULL) ORDER BY dt_uploaded";
 		
 		if (limit != null) {
 			sql += " LIMIT " + limit.toString();
@@ -158,6 +159,17 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		}
 	}
 
+	@Override
+	public void logUpdate(Update update) {
+		logger.debug("logging update " + update.getId());
+		
+		int rowsAffected = jdbcTemplate.update("INSERT INTO " + getLogTable() + " SELECT * FROM " + getInterfaceTable() + " WHERE id = ?", Long.valueOf(update.getId()));
+
+		if (rowsAffected != 1) {
+			logger.warn("log of update " + update.getId() + " affected " + rowsAffected + " rows");
+		}
+	}
+	
 	private String getBinaryFilename(Update update) {
 		return update.getFilename();
 	}
@@ -247,6 +259,18 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		}
 		
 		this.interfaceTable = interfaceTable;
+	}
+
+	public String getLogTable() {
+		return logTable;
+	}
+
+	public void setLogTable(String logTable) {
+		if (!logTable.matches("[A-Za-z][A-Za-z0-9_\\.]*")) {
+			throw new IllegalArgumentException("illegal table name: " + logTable);
+		}
+
+		this.logTable = logTable;
 	}
 
 	public DataSource getDataSource() {

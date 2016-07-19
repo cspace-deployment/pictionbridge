@@ -14,11 +14,12 @@ public class MonitorManagingUpdateProcessor implements UpdateProcessor {
 	private UpdateMonitor monitor;
 	private boolean markComplete = false;
 	private boolean deleteBinary = false;
+	private boolean logUpdate = false;
 	private boolean deleteUpdate = false;
 	
 	@Override
 	public void process(List<Update> updates) {
-		logger.info(MonitorManagingUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates with markComplete=" + isMarkComplete() + ", deleteBinary=" + isDeleteBinary() + ", deleteUpdate=" + isDeleteUpdate());
+		logger.info(MonitorManagingUpdateProcessor.class.getSimpleName() + " processing " + updates.size() + " updates with markComplete=" + isMarkComplete() + ", deleteBinary=" + isDeleteBinary() + ", logUpdate=" + isLogUpdate() + ", deleteUpdate=" + isDeleteUpdate());
 
 		for (Update update : updates) {
 			if (isMarkComplete()) {
@@ -27,6 +28,10 @@ public class MonitorManagingUpdateProcessor implements UpdateProcessor {
 			
 			if (isDeleteBinary()) {
 				getMonitor().deleteBinary(update);
+			}
+			
+			if (isLogUpdate()) {
+				getMonitor().logUpdate(update);
 			}
 			
 			if (isDeleteUpdate()) {
@@ -62,6 +67,14 @@ public class MonitorManagingUpdateProcessor implements UpdateProcessor {
 
 	public void setDeleteBinary(boolean deleteBinary) {
 		this.deleteBinary = deleteBinary;
+	}
+
+	public boolean isLogUpdate() {
+		return logUpdate;
+	}
+
+	public void setLogUpdate(boolean logUpdate) {
+		this.logUpdate = logUpdate;
 	}
 
 	public boolean isDeleteUpdate() {

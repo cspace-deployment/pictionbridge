@@ -47,6 +47,20 @@ public class CollectionSpaceRestUploader implements Uploader {
 	private UriTemplate mediaRefNameTemplate;
 	private int pauseBetweenUpdatesMillis = 0;
 
+	public static String computeOrderNumber(boolean isPrimary, Integer imageNumber) {
+		if (imageNumber == null) {
+			imageNumber = 0;
+		}
+		
+		String orderNumber = StringUtils.leftPad(imageNumber.toString(), 5, '0');
+		
+		if (!isPrimary) {
+			orderNumber = "alt " + orderNumber;
+		}
+		
+		return orderNumber;
+	}
+	
 	public CollectionSpaceRestUploader() {
 		
 	}
@@ -385,10 +399,10 @@ public class CollectionSpaceRestUploader implements Uploader {
 		media.common.title = title;
 		media.common.blobCsid = update.getBlobCsid();
 		media.bampfa.primaryDisplay = isPrimary;
-		media.bampfa.imageNumber = update.getImageNumber();
+		media.bampfa.imageNumber = getImageNumber(update);
 		media.bampfa.pictionId = update.getPictionId();
 		media.bampfa.pictionImageHash = update.getHash();
-		media.bampfa.computedOrderNumber = computeOrderNumber(isPrimary, update.getImageNumber());
+		media.bampfa.computedOrderNumber = computeOrderNumber(isPrimary, media.bampfa.imageNumber);
 		media.bampfa.websiteDisplayLevel = normalizeWebsiteDisplayLevel(update.getWebsiteDisplayLevel());
 
 		logger.debug("media csid=" + media.csid + ", title=" + media.common.title + ", primaryDisplay=" + media.bampfa.primaryDisplay + ", imageNumber=" + media.bampfa.imageNumber + ", websiteDisplayLevel=" + media.bampfa.websiteDisplayLevel + ", blobCsid=" + media.common.blobCsid);
@@ -415,16 +429,6 @@ public class CollectionSpaceRestUploader implements Uploader {
 		}
 		
 		return normalized;
-	}
-	
-	private String computeOrderNumber(boolean isPrimary, Integer imageNumber) {
-		String orderNumber = StringUtils.leftPad(imageNumber.toString(), 5, '0');
-		
-		if (!isPrimary) {
-			orderNumber = "alt " + orderNumber;
-		}
-		
-		return orderNumber;
 	}
 	
 	private Media readMedia(String csid) {

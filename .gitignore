@@ -5,3 +5,5 @@ setenv.sh
 tunnel*.sh
 target
 *.log
+.factorypath
+.vscode

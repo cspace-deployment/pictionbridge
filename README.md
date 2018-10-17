@@ -24,46 +24,46 @@ To install on a server, copy the distribution file (`pictionbridge-[version]-dis
 The following environment variables must be set to run the program:
 
 - `PICTION_BRIDGE_HOME`
-        
-       The full path to the Pictionbridge installation directory. This is the directory that was created by expanding the distribution file, and contains the `bin`, `conf`, `lib`, `logs`, and `work` subdirectories.
 
-       Note: It is not necessary to set this variable when running in development via `mvn exec:java`. Maven will automatically set the installation directory to the `target` directory. If `PICTION_BRIDGE_HOME` is set, it will have no effect.
+  The full path to the Pictionbridge installation directory. This is the directory that was created by expanding the distribution file, and contains the `bin`, `conf`, `lib`, `logs`, and `work` subdirectories.
+
+  Note: It is not necessary to set this variable when running in development via `mvn exec:java`. Maven will automatically set the installation directory to the `target` directory. If `PICTION_BRIDGE_HOME` is set, it will have no effect.
 
 - `PICTION_BRIDGE_CONF`
-        
-       The name of a configuration profile to use. This should correspond to a file in `$PICTION_BRIDGE_HOME/conf`, but should not have the .xml extension.
+
+  The name of a configuration profile to use. This should correspond to a file in `$PICTION_BRIDGE_HOME/conf`, but should not have the .xml extension.
 
 - `PICTION_BRIDGE_DB_HOST`
 
-       The hostname of the database server to use to access the table containing updates.
+  The hostname of the database server to use to access the table containing updates.
 
 - `PICTION_BRIDGE_DB_PORT`
 
-       The port of the database server to use to access the table containing updates.
+  The port of the database server to use to access the table containing updates.
 
 - `PICTION_BRIDGE_DB_NAME`
 
-       The name of the database in which to find the table containing updates.
+  The name of the database in which to find the table containing updates.
 
 - `PICTION_BRIDGE_DB_USER`
 
-       The name of the database user to use to access the table containing updates. This database user must exist, and have appropriate permissions on the table.
+  The name of the database user to use to access the table containing updates. This database user must exist, and have appropriate permissions on the table.
 
 - `PICTION_BRIDGE_DB_PW`
 
-       The password of the `PICTION_BRIDGE_DB_USER` user.
+  The password of the `PICTION_BRIDGE_DB_USER` user.
 
 - `PICTION_BRIDGE_CSPACE_HOST`
 
-       The hostname of the CollectionSpace instance.
+  The hostname of the CollectionSpace instance.
 
 - `PICTION_BRIDGE_CSPACE_USER`
 
-       The name of a CollectionSpace user to use to make updates to the CollectionSpace instance. This CollectionSpace user must exist, and have appropriate permissions on Media and Collection Object records.
+  The name of a CollectionSpace user to use to make updates to the CollectionSpace instance. This CollectionSpace user must exist, and have appropriate permissions on Media and Collection Object records.
 
 - `PICTION_BRIDGE_CSPACE_PW`
 
-       The password of the `PICTION_BRIDGE_CSPACE_USER` user.
+  The password of the `PICTION_BRIDGE_CSPACE_USER` user.
 
 If none of the required variables are set in the environment, pictionbridge will attempt to source them from a file named `.pictionbridge` in the running user's home directory.
 
@@ -76,8 +76,6 @@ For the configuration profile named by `$PICTION_BRIDGE_CONF`, the profile's set
 
 - `cspaceRestUploader`/`servicesUrlTemplate`: The location of the CollectionSpace services layer REST API.
 - `cspaceRestUploader`/`pauseBetweenUpdatesMillis`: A number of milliseconds to pause between each update to CollectionSpace. This may be used for throttling.
-
-- `bmuFilenameParser`/`uploadUrl`: The location of the BMU API, used for parsing filenames.
 
 ## Logging
 

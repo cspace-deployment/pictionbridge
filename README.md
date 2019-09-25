@@ -23,6 +23,10 @@ To install on a server, copy the distribution file (`pictionbridge-[version]-dis
 
 The following environment variables must be set to run the program:
 
+- `PICTION_BRIDGE_VERSION`
+  
+  The version of Pictionbridge jar/lib file.  For example, 1.2.2, 1.3, 1.4.1
+
 - `PICTION_BRIDGE_HOME`
 
   The full path to the Pictionbridge installation directory. This is the directory that was created by expanding the distribution file, and contains the `bin`, `conf`, `lib`, `logs`, and `work` subdirectories.

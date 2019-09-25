@@ -7,3 +7,4 @@ target
 *.log
 .factorypath
 .vscode
+.DS_Store

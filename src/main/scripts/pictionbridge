@@ -5,6 +5,7 @@
 RESOURCE_FILE=~/.pictionbridge
 
 if [[ (-z $PICTION_BRIDGE_HOME) && 
+      (-z $PICTION_BRIDGE_VERSION) &&
       (-z $PICTION_BRIDGE_CONF) &&
       (-z $PICTION_BRIDGE_DB_HOST) &&
       (-z $PICTION_BRIDGE_DB_PORT) &&
@@ -24,6 +25,11 @@ fi
 
 if [ -z $PICTION_BRIDGE_HOME ]; then
     echo "Environment variable PICTION_BRIDGE_HOME must be set"
+    exit 1
+fi
+
+if [ -z $PICTION_BRIDGE_VERSION ]; then
+    echo "Environment variable PICTION_BRIDGE_VERSION must be set"
     exit 1
 fi
 
@@ -74,7 +80,7 @@ fi
 
 # Execute the java program.
 
-CLASSPATH=$PICTION_BRIDGE_HOME/lib/pictionbridge-1.0-beta.jar:$PICTION_BRIDGE_HOME/lib/*
+CLASSPATH=$PICTION_BRIDGE_HOME/lib/pictionbridge-$PICTION_BRIDGE_VERSION.jar:$PICTION_BRIDGE_HOME/lib/*
 CONF_FILE=$PICTION_BRIDGE_HOME/conf/$PICTION_BRIDGE_CONF.xml
 LOG4J_CONF_FILE=$PICTION_BRIDGE_HOME/conf/log4j2.xml
 MAIN_CLASS=edu.berkeley.cspace.pictionbridge.PictionBridge

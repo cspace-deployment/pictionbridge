@@ -163,19 +163,45 @@ public class CollectionSpaceRestUploader implements Uploader {
 	 * @return       True if successful, false otherwise.
 	 */
 	private boolean doNew(Update update) {
-		if (update.getObjectCsid() == null) {
-			logger.warn("skipping update " +  update.getId() + " (" + update.getAction() + "): object csid is null");
+		if (update.getObjectCsid() == null && update.getObjectNumber() == null) {
+			logger.warn("Skipping update " +  update.getId() + " (" + update.getAction() + "): object CSID and object number are both null.");
 			return false;
 		}
 
-		CollectionObject collectionObject = readCollectionObject(update.getObjectCsid());
-
+		boolean foundWithCsid = false;
+		CollectionObject collectionObject = null;
+		
+		// First, try to find it with the CSID
+		String csid = update.getObjectCsid();
+		if (csid != null && !csid.trim().isEmpty()) {
+			collectionObject = readCollectionObject(update.getObjectCsid());
+		}
+		
+		// Next, try to find with object number
+		String objectNumber = update.getObjectNumber();
+		if (collectionObject == null && (objectNumber != null && !objectNumber.trim().isEmpty())) {
+			collectionObject = this.findCollectionObjectById(update.getObjectNumber());
+		} else {
+			foundWithCsid = true;
+		}
+		
 		if (collectionObject == null) {
-			logger.error("update " + update.getId() + " failed: could not find collection object with csid " + update.getObjectCsid());
+			csid = update.getObjectCsid() != null ? update.getObjectCsid() : "<empty>";
+			objectNumber = update.getObjectNumber() != null ? update.getObjectNumber() : "<empty>";
+			String message = String.format("Update %d failed: Could not find collection object by CSID='%s' and could not find using object number '%s'.",
+					update.getId(), csid, objectNumber);
+			logger.error(message);
 			return false;
 		}
 		
-		logger.debug("found collection object for csid " + update.getObjectCsid() + ": " + collectionObject.toString());
+		// Ensure the object CSID is set in the update object
+		update.setObjectCsid(collectionObject.csid);
+		
+		if (foundWithCsid == true) {
+			logger.debug("Found collection object for csid " + update.getObjectCsid() + ": " + collectionObject.toString());
+		} else {
+			logger.debug("Found collection object for objectNumber " + update.getObjectNumber() + ": " + collectionObject.toString());
+		}
 
 		update.setBlobCsid(createBlob(update.getFilename(), update.getBinaryFile()));
 
@@ -349,6 +375,41 @@ public class CollectionSpaceRestUploader implements Uploader {
 		
 		return found;
 	}
+
+	/*
+	 * Example cURL equivalent:
+	 * 		curl -X GET 'https://core.collectionspace.org/cspace-services/collectionobjects?as=(collectionobjects_common:objectNumber = "2019")' -i -u admin@core.collectionspace.org:Administrator
+	 */
+	private CollectionObject findCollectionObjectById(String objectNumber) {
+		CollectionObject found = null;
+		
+		String searchQuery = "(collectionobjects_common:objectNumber=\"" + nxqlEscapeString(objectNumber) + "\")";
+		
+		String url = UriComponentsBuilder.fromUriString(getServicesUrlTemplate())
+			.queryParam("as", searchQuery)
+			.queryParam("wf_deleted", "false")
+			.queryParam("pgSz", 0)
+			.build()
+			.toString();
+		
+		logger.debug("searching for cataloging/object: url=" + url);
+		
+		RecordList recordList = restTemplate.getForObject(url, RecordList.class, COLLECTION_OBJECT_SERVICE_NAME, null);
+		
+		if (recordList.totalItems == 1) {
+			for (RecordList.Item item : recordList.items) {
+				found = readCollectionObject(item.csid);
+			}
+		} else if (recordList.totalItems > 1) {
+			logger.error(String.format("Expected to find a single records when search for objectNumber='%s', but found %d records instead.",
+					objectNumber, recordList.totalItems));
+		} else {
+			logger.error(String.format("Expected to find a record with objectNumber='%s', but found %d records instead.",
+					objectNumber, recordList.totalItems));
+		}
+		
+		return found;
+	}	
 	
 	private String nxqlEscapeString(String s) {
 		return s.replace("\\", "\\\\").replace("\"", "\\\"");
@@ -463,9 +524,13 @@ public class CollectionSpaceRestUploader implements Uploader {
 		
 		logger.debug("deleting media with csid " + csid);
 
-		restTemplate.delete(getServicesUrlTemplate(), MEDIA_SERVICE_NAME, csid);
-
-		logger.info("deleted media with csid " + csid);
+		try {
+			restTemplate.delete(getServicesUrlTemplate(), MEDIA_SERVICE_NAME, csid);
+			logger.info("deleted media with csid " + csid);
+		} catch (Exception e) {
+			logger.warn(String.format("Attempted to but could not delete media record with csid='%s': %s",
+					csid, e.getMessage()));
+		}
 	}
 	
 	/**

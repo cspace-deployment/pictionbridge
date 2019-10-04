@@ -63,7 +63,7 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 	@Override
 	public List<Update> getUpdates() {
 		Integer limit = getLimit();
-		String sql = "SELECT id, piction_id, filename, mimetype, img_size, img_height, img_width, object_csid, action, relationship, dt_addedtopiction, dt_uploaded, bimage, sha1_hash, website_display_level FROM " + getInterfaceTable() + " WHERE (dt_uploaded > dt_processed) OR (dt_processed IS NULL) ORDER BY dt_uploaded";
+		String sql = "SELECT id, piction_id, filename, mimetype, img_size, img_height, img_width, object_csid, object_number, action, relationship, dt_addedtopiction, dt_uploaded, bimage, sha1_hash, website_display_level FROM " + getInterfaceTable() + " WHERE (dt_uploaded > dt_processed) OR (dt_processed IS NULL) ORDER BY dt_uploaded";
 		
 		if (limit != null) {
 			sql += " LIMIT " + limit.toString();
@@ -85,8 +85,9 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 					update.setImgHeight(results.getInt(6));
 					update.setImgWidth(results.getInt(7));
 					update.setObjectCsid(results.getString(8));
+					update.setObjectNumber(results.getString(9));
 					
-					String actionString = results.getString(9);
+					String actionString = results.getString(10);
 					UpdateAction action = null;
 					
 					try {
@@ -98,7 +99,7 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 
 					update.setAction(action);
 					
-					String relationshipString = results.getString(10);
+					String relationshipString = results.getString(11);
 					UpdateRelationship relationship = null;
 					
 					try {
@@ -110,11 +111,11 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 					
 					update.setRelationship(relationship);
 					
-					update.setDateTimeAddedToPiction(results.getTimestamp(11));
-					update.setDateTimeUploaded(results.getTimestamp(12));
-					update.setBinaryFile(extractBinary(results.getBinaryStream(13), update));
-					update.setHash(results.getString(14));
-					update.setWebsiteDisplayLevel(results.getString(15));
+					update.setDateTimeAddedToPiction(results.getTimestamp(12));
+					update.setDateTimeUploaded(results.getTimestamp(13));
+					update.setBinaryFile(extractBinary(results.getBinaryStream(14), update));
+					update.setHash(results.getString(15));
+					update.setWebsiteDisplayLevel(results.getString(16));
 					
 					logger.info("found update\n" + update.toString());
 					

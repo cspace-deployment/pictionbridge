@@ -19,7 +19,7 @@ public class CompleteUpdateFilter extends AbstractUpdateFilter implements Update
 			update.getImgSize() != null &&
 			update.getImgHeight() != null &&
 			update.getImgWidth() != null &&
-			StringUtils.isNotEmpty(update.getObjectCsid()) &&
+			(StringUtils.isNotEmpty(update.getObjectCsid()) || StringUtils.isNotEmpty(update.getObjectNumber()) ) &&
 			update.getAction() != null &&
 			update.getRelationship() != null &&
 			update.getDateTimeAddedToPiction() != null &&

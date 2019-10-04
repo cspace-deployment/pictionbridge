@@ -56,7 +56,7 @@ public class PictionBridgeUtils {
 						byte[] digestResult = digest.digest();
 						String actualHash = Hex.encodeHexString(digestResult);
 						
-						logger.debug("computed hash: " + actualHash);
+						logger.debug(String.format("computed hash for '%s' file: %s", update.getFilename(), actualHash));
 						
 						verified = actualHash.equals(expectedHash);
 					}

@@ -16,21 +16,21 @@ public class Media {
 	@XmlElement(name="media_common", namespace="http://collectionspace.org/services/media")
 	public Common common = new Common();
 	
-	@XmlElement(name="media_bampfa", namespace="http://collectionspace.org/services/media/local/bampfa")
-	public BAMPFA bampfa = new BAMPFA();
+	@XmlElement(name="media_piction", namespace="http://collectionspace.org/services/media/local/piction")
+	public PictionMediaExtension bampfa = new PictionMediaExtension();
 
 	@XmlElement(name="collectionspace_core", namespace="http://collectionspace.org/collectionspace_core/")
 	public Core core = new Core();
 
-	public static class Common {		
+	public static class Common {
 		@XmlElement
 		public String title;
-		
+
 		@XmlElement
 		public String blobCsid;
 	}
 	
-	public static class BAMPFA {
+	public static class PictionMediaExtension {
 		@XmlElement
 		public Integer imageNumber;
 

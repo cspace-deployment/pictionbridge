@@ -16,8 +16,8 @@ public class Media {
 	@XmlElement(name="media_common", namespace="http://collectionspace.org/services/media")
 	public Common common = new Common();
 	
-	@XmlElement(name="media_piction", namespace="http://collectionspace.org/services/media/local/piction")
-	public PictionMediaExtension bampfa = new PictionMediaExtension();
+	@XmlElement(name="media_piction", namespace="http://collectionspace.org/services/media/domain/piction")
+	public PictionMediaExtension piction = new PictionMediaExtension();
 
 	@XmlElement(name="collectionspace_core", namespace="http://collectionspace.org/collectionspace_core/")
 	public Core core = new Core();

@@ -47,6 +47,10 @@ public class CollectionSpaceRestUploader implements Uploader {
 	private UriTemplate mediaRefNameTemplate;
 	private int pauseBetweenUpdatesMillis = 0;
 
+	/*
+	 * This method should mirror the method here:
+	 * 	https://github.com/cspace-deployment/cspace-ui-plugin-profile-bampfa.js/blob/master/src/plugins/recordTypes/media/utils.js
+	 */
 	public static String computeOrderNumber(boolean isPrimary, Integer imageNumber) {
 		if (imageNumber == null) {
 			imageNumber = 0;
@@ -78,19 +82,23 @@ public class CollectionSpaceRestUploader implements Uploader {
 	@Override
 	public void send(List<Update> updates) throws UploadException {
 		for (Update update : updates) {
-			if (send(update)) {
-				update.setUploadedToCollectionSpace(true);
+			try {
+				if (send(update)) {
+					update.setUploadedToCollectionSpace(true);
+				}
+			} catch (Exception e) {
+				logger.error(e.getMessage());
 			}
 			
 			try {
 				Thread.sleep(pauseBetweenUpdatesMillis);
-			}
-			catch (InterruptedException e) {
+			} catch (Exception e) {
+				logger.debug(e);
 			}
 		}
 	}
 
-	private boolean send(Update update) {
+	private boolean send(Update update) throws Exception {
 		switch(update.getAction()) {
 			case NEW:
 				// NEW should not be used any more, but if it appears it should be treated like UPDATE.
@@ -110,8 +118,9 @@ public class CollectionSpaceRestUploader implements Uploader {
 	 * 
 	 * @param update The update
 	 * @return       True if successful, false otherwise.
+	 * @throws Exception 
 	 */
-	private boolean doNewOrUpdate(Update update) {
+	private boolean doNewOrUpdate(Update update) throws Exception {
 		logger.info("checking for existing media records from Piction with filename " + update.getFilename());
 		
 		List<Media> existingMedia = findMediaFromPiction(update.getFilename());
@@ -134,9 +143,9 @@ public class CollectionSpaceRestUploader implements Uploader {
 			update.setMediaCsid(media.csid);
 			update.setBlobCsid(media.common.blobCsid);
 
-			logger.debug("found existing Piction media record for filename " + update.getFilename() + ": csid=" + media.csid + " blobCsid=" + media.common.blobCsid + " pictionId=" + media.bampfa.pictionId);
+			logger.debug("found existing Piction media record for filename " + update.getFilename() + ": csid=" + media.csid + " blobCsid=" + media.common.blobCsid + " pictionId=" + media.piction.pictionId);
 
-			String existingImageHash = media.bampfa.pictionImageHash;
+			String existingImageHash = media.piction.pictionImageHash;
 
 			if (existingImageHash != null && existingImageHash.equals(update.getHash())) {
 				logger.debug("existing image hash " + existingImageHash + " is equal to the update hash -- performing metadata update only");
@@ -161,8 +170,9 @@ public class CollectionSpaceRestUploader implements Uploader {
 	 * 
 	 * @param update The update
 	 * @return       True if successful, false otherwise.
+	 * @throws Exception 
 	 */
-	private boolean doNew(Update update) {
+	private boolean doNew(Update update) throws Exception {
 		if (update.getObjectCsid() == null && update.getObjectNumber() == null) {
 			logger.warn("Skipping update " +  update.getId() + " (" + update.getAction() + "): object CSID and object number are both null.");
 			return false;
@@ -363,7 +373,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 				if (isFromPiction != null) {
 					// A media record originated from Piction if it has a non-null pictionId.
 					
-					boolean candidateIsFromPiction = (candidateMedia.bampfa.pictionId != null);
+					boolean candidateIsFromPiction = (candidateMedia.piction.pictionId != null);
 					isMatch = (candidateIsFromPiction == isFromPiction);
 				}
 				
@@ -459,14 +469,14 @@ public class CollectionSpaceRestUploader implements Uploader {
 		media.csid = update.getMediaCsid();
 		media.common.title = title;
 		media.common.blobCsid = update.getBlobCsid();
-		media.bampfa.primaryDisplay = isPrimary;
-		media.bampfa.imageNumber = getImageNumber(update);
-		media.bampfa.pictionId = update.getPictionId();
-		media.bampfa.pictionImageHash = update.getHash();
-		media.bampfa.computedOrderNumber = computeOrderNumber(isPrimary, media.bampfa.imageNumber);
-		media.bampfa.websiteDisplayLevel = normalizeWebsiteDisplayLevel(update.getWebsiteDisplayLevel());
+		media.piction.primaryDisplay = isPrimary;
+		media.piction.imageNumber = getImageNumber(update);
+		media.piction.pictionId = update.getPictionId();
+		media.piction.pictionImageHash = update.getHash();
+		media.piction.computedOrderNumber = computeOrderNumber(isPrimary, media.piction.imageNumber);
+		media.piction.websiteDisplayLevel = normalizeWebsiteDisplayLevel(update.getWebsiteDisplayLevel());
 
-		logger.debug("media csid=" + media.csid + ", title=" + media.common.title + ", primaryDisplay=" + media.bampfa.primaryDisplay + ", imageNumber=" + media.bampfa.imageNumber + ", websiteDisplayLevel=" + media.bampfa.websiteDisplayLevel + ", blobCsid=" + media.common.blobCsid);
+		logger.debug("media csid=" + media.csid + ", title=" + media.common.title + ", primaryDisplay=" + media.piction.primaryDisplay + ", imageNumber=" + media.piction.imageNumber + ", websiteDisplayLevel=" + media.piction.websiteDisplayLevel + ", blobCsid=" + media.common.blobCsid);
 
 		return media;
 	}
@@ -636,7 +646,9 @@ public class CollectionSpaceRestUploader implements Uploader {
 			collectionObject.csid = csid;
 		}
 		catch(HttpClientErrorException e) {
-			logger.error("could not read collection object with csid " + csid, e);
+			String errMsg = String.format("Expected to but did not find cataloging/object record with CSID='%s'.",
+					csid);
+			throw new HttpClientErrorException(e.getStatusCode(), errMsg);
 		}
 		
 		return collectionObject;

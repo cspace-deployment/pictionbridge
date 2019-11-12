@@ -20,11 +20,11 @@ export PICTION_BRIDGE_DB_HOST=dba-postgres-dev-42.ist.berkeley.edu
 export PICTION_BRIDGE_DB_PORT=5315
 export PICTION_BRIDGE_DB_NAME=piction_transit
 export PICTION_BRIDGE_DB_USER=piction
-export PICTION_BRIDGE_DB_PW=p6!ct90PkQ
+export PICTION_BRIDGE_DB_PW=
 
 export PICTION_BRIDGE_CSPACE_HOST=bampfa-dev.cspace.berkeley.edu
 export PICTION_BRIDGE_CSPACE_USER=pictionbridge@bampfa.cspace.berkeley.edu
-export PICTION_BRIDGE_CSPACE_PW=pAi7Xtj7Lt6v
+export PICTION_BRIDGE_CSPACE_PW=
  */
 
 public class PictionBridge {

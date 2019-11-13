@@ -10,6 +10,7 @@ public interface UpdateMonitor {
 	
 	public List<Update> getUpdates();
 	public void markUpdateComplete(Update update);
+	public void setObjectCSID(Update update);
 	public void deleteBinary(Update update);
 	public void deleteUpdate(Update update);
 	public void logUpdate(Update update);

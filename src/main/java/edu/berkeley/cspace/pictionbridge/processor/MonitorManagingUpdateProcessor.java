@@ -24,6 +24,7 @@ public class MonitorManagingUpdateProcessor implements UpdateProcessor {
 		for (Update update : updates) {
 			if (isMarkComplete()) {
 				getMonitor().markUpdateComplete(update);
+				getMonitor().setObjectCSID(update);
 			}
 			
 			if (isDeleteBinary()) {

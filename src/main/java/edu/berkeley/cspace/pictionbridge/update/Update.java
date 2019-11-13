@@ -189,6 +189,7 @@ public class Update {
 	public String toString() {
 		StringBuilder str = new StringBuilder();
 		
+		str.append("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
 		str.append("id: " + Objects.toString(getId(), "") + "\n");
 		str.append("pictionId: " + Objects.toString(getPictionId(), "") + "\n");
 		str.append("filename: " + Objects.toString(getFilename(), "") + "\n");
@@ -208,7 +209,8 @@ public class Update {
 		str.append("objectNumber: " + Objects.toString(getObjectNumber(), "") + "\n");
 		str.append("imageNumber: " + Objects.toString(getImageNumber(), "") + "\n");
 		str.append("websiteDisplayLevel: " + Objects.toString(getWebsiteDisplayLevel(), "") + "\n");
-		str.append("uploadedToCollectionSpace: " + Boolean.toString(isUploadedToCollectionSpace()));
+		str.append("uploadedToCollectionSpace: " + Boolean.toString(isUploadedToCollectionSpace()) + "\n");
+		str.append(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
 		
 		return str.toString();
 	}

@@ -411,7 +411,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 				found = readCollectionObject(item.csid);
 			}
 		} else if (recordList.totalItems > 1) {
-			logger.error(String.format("Expected to find a single records when search for objectNumber='%s', but found %d records instead.",
+			logger.error(String.format("Expected to find a single record when searching for objectNumber='%s', but found %d records instead.",
 					objectNumber, recordList.totalItems));
 		} else {
 			logger.error(String.format("Expected to find a record with objectNumber='%s', but found %d records instead.",

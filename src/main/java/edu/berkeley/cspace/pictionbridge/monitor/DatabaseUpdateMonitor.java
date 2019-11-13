@@ -137,6 +137,19 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 			logger.warn("marking update " + update.getId() + " complete affected " + rowsAffected + " rows");
 		}
 	}
+	
+	@Override
+	public void setObjectCSID(Update update) {
+		logger.debug("setting object CSID " + update.getId() + " complete");
+	
+		int rowsAffected = jdbcTemplate.update("UPDATE " + getInterfaceTable() + " SET object_csid = ? WHERE id = ?",
+				update.getObjectCsid(),
+				Long.valueOf(update.getId()));
+
+		if (rowsAffected != 1) {
+			logger.warn("setting object CSID for update " + update.getId() + " complete affected " + rowsAffected + " rows");
+		}
+	}
 
 	@Override
 	public void deleteBinary(Update update) {

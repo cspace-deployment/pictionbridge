@@ -14,6 +14,9 @@
 # example:
 #   ./insert_row.sh testfile.txt
 #
+# Set the postgres password env var:
+#	export PGPASSWORD=<password>
+#
 HOST="localhost"
 PORT="5678"
 DBNAME="piction_transit"

@@ -8,7 +8,7 @@ public interface UpdateMonitor {
 	public boolean hasUpdates();
 	public int getUpdateCount();
 	
-	public List<Update> getUpdates();
+	public List<Update> getUpdates(String defaultRelationshipValue);
 	public void markUpdateComplete(Update update);
 	public void setObjectCSID(Update update);
 	public void deleteBinary(Update update);
@@ -17,4 +17,7 @@ public interface UpdateMonitor {
 	
 	public Integer getLimit();
 	public void setLimit(Integer limit);
+
+	public String getDefaultRelationshipValue();
+	public void setDefaultRelationshipValue(String defaultRelationshipValue);
 }

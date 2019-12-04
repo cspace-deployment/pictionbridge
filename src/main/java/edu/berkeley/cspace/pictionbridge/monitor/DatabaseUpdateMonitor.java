@@ -23,12 +23,25 @@ import edu.berkeley.cspace.pictionbridge.update.Update;
 import edu.berkeley.cspace.pictionbridge.update.UpdateAction;
 import edu.berkeley.cspace.pictionbridge.update.UpdateRelationship;
 
+abstract class CSpaceRowMapper implements RowMapper<Update> {
+	private String defaultRelationshipValue;
+	
+	CSpaceRowMapper(String defaultRelationshipValue) {
+		this.defaultRelationshipValue = defaultRelationshipValue;
+	}
+	
+	public String getDefaultRelationshipValue() {
+		return defaultRelationshipValue;
+	}
+}
+
 public class DatabaseUpdateMonitor implements UpdateMonitor {
 	private static final Logger logger = LogManager.getLogger(DatabaseUpdateMonitor.class);
 	
 	private static final String BINARY_DIR = "binaries";
 	
 	private Integer limit;
+	private String defaultRelationshipValue;
 	private String workPath;
 	private String interfaceTable;
 	private String logTable;
@@ -52,28 +65,30 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		}
 	}
 
+	@Override
 	public boolean hasUpdates() {
 		return (getUpdateCount() > 0);
 	}
-
+	
+	@Override
 	public int getUpdateCount() {
 		return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + getInterfaceTable() + " WHERE dt_processed IS NULL", Integer.class);
 	}
-	
+
 	@Override
-	public List<Update> getUpdates() {
+	public List<Update> getUpdates(String defaultRelationshipValue) {
 		Integer limit = getLimit();
 		String sql = "SELECT id, piction_id, filename, mimetype, img_size, img_height, img_width, object_csid, object_number, action, relationship, dt_addedtopiction, dt_uploaded, bimage, sha1_hash, website_display_level FROM " + getInterfaceTable() + " WHERE (dt_uploaded > dt_processed) OR (dt_processed IS NULL) ORDER BY dt_uploaded";
 		
 		if (limit != null) {
 			sql += " LIMIT " + limit.toString();
 		}
-		
+
 		logger.debug("executing query: " + sql);
-		
+
 		List<Update> updates = jdbcTemplate.query(
 			sql,
-			new RowMapper<Update>() {
+			new CSpaceRowMapper(defaultRelationshipValue) {
 				public Update mapRow(ResultSet results, int rowNum) throws SQLException {
 					Update update = new Update();
 					
@@ -89,28 +104,31 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 					
 					String actionString = results.getString(10);
 					UpdateAction action = null;
-					
 					try {
 						action = UpdateAction.valueOf(actionString);
-					}
-					catch(IllegalArgumentException e) {
+					} catch (IllegalArgumentException e) {
 						logger.warn("update " + update.getId() + " has unknown action " + actionString);
 					}
-
 					update.setAction(action);
-					
+
+					//
+					// Check the config to see if we have a default relationship to use if one is not supplied.
+					//
 					String relationshipString = results.getString(11);
+					if (relationshipString == null || relationshipString.trim().isEmpty()) {
+						relationshipString = getDefaultRelationshipValue();
+					}
+					//
+					// Ensure the relationship value is valid
+					//
 					UpdateRelationship relationship = null;
-					
 					try {
 						relationship = UpdateRelationship.valueOf(relationshipString);
+					} catch(IllegalArgumentException e) {
+						logger.warn("update " + update.getId() + " has unknown relationship value " + relationshipString);
 					}
-					catch(IllegalArgumentException e) {
-						logger.warn("update " + update.getId() + " has unknown relationship " + relationshipString);
-					}
-					
 					update.setRelationship(relationship);
-					
+
 					update.setDateTimeAddedToPiction(results.getTimestamp(12));
 					update.setDateTimeUploaded(results.getTimestamp(13));
 					update.setBinaryFile(extractBinary(results.getBinaryStream(14), update));
@@ -245,14 +263,26 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		return file;
 	}
 	
-	public Integer getLimit() {
-		return limit;
+	@Override
+	public String getDefaultRelationshipValue() {
+		return defaultRelationshipValue;
+	}
+	
+	@Override
+	public void setDefaultRelationshipValue(String defaultRelationshipValue) {
+		this.defaultRelationshipValue = defaultRelationshipValue;
 	}
 
+	@Override
 	public void setLimit(Integer limit) {
 		this.limit = limit;
 	}
 
+	@Override
+	public Integer getLimit() {
+		return limit;
+	}
+	
 	public String getWorkPath() {
 		return workPath;
 	}
@@ -295,5 +325,4 @@ public class DatabaseUpdateMonitor implements UpdateMonitor {
 		this.dataSource = dataSource;
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
 	}
-
 }

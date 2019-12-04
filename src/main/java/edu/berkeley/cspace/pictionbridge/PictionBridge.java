@@ -42,20 +42,20 @@ public class PictionBridge {
 			logger.fatal("required property " + CONFIG_FILE_PROPERTY + " is not set");
 			return;
 		}
-				
+
 		try (FileSystemXmlApplicationContext context = new FileSystemXmlApplicationContext("file:" + configFile)) {
 			logger.info("starting up with configuration file " + configFile);
 
 			UpdateMonitor updateMonitor = context.getBean("updateMonitor", UpdateMonitor.class);
 			UpdateProcessor updateProcessor = context.getBean("updateProcessor", UpdateProcessor.class);
 
-			int totalCount = updateMonitor.getUpdateCount();			
-			List<Update> updates = updateMonitor.getUpdates();
-			
+			int totalCount = updateMonitor.getUpdateCount();
+			List<Update> updates = updateMonitor.getUpdates(updateMonitor.getDefaultRelationshipValue());
+
 			logger.info("found " + updates.size() + " updates" + (updateMonitor.getLimit() != null ? " (total " + totalCount + ", limited to " + updateMonitor.getLimit() + ")" : ""));
-			
+
 			updateProcessor.process(updates);
-			
+
 			logger.info("successfully processed " + updates.size() + " updates");
 			logger.info("exiting");
 		}

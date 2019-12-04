@@ -14,6 +14,9 @@
 		<!-- Comment this out to retrieve all available updates. -->
 		<property name="limit" value="500"/>
 		
+		<!-- Default "relationship" value -->
+		<property name="defaultRelationshipValue" value="ALTERNATE"/>
+		
 		<!-- The path to a directory where files that need be created will be stored. -->
 		<!-- Extracted binaries will be stored in a subdirectory inside of this directory. -->
 		<property name="workPath" value="#{ systemProperties['pictionBridge.home'] }/work/cinefiles"/>

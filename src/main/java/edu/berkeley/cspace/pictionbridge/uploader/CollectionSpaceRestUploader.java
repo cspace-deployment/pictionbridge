@@ -4,7 +4,6 @@ import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -173,7 +172,9 @@ public class CollectionSpaceRestUploader implements Uploader {
 	 * @throws Exception 
 	 */
 	private boolean doNew(Update update) throws Exception {
-		if (update.getObjectCsid() == null && update.getObjectNumber() == null) {
+		String objectNumber = update.getObjectNumber() != null ? update.getObjectNumber().trim() : null;
+
+		if (update.getObjectCsid() == null && objectNumber == null) {
 			logger.warn("Skipping update " +  update.getId() + " (" + update.getAction() + "): object CSID and object number are both null.");
 			return false;
 		}
@@ -188,16 +189,15 @@ public class CollectionSpaceRestUploader implements Uploader {
 		}
 		
 		// Next, try to find with object number
-		String objectNumber = update.getObjectNumber();
 		if (collectionObject == null && (objectNumber != null && !objectNumber.trim().isEmpty())) {
-			collectionObject = this.findCollectionObjectById(update.getObjectNumber());
+			collectionObject = this.findCollectionObjectById(objectNumber);
 		} else {
 			foundWithCsid = true;
 		}
 		
 		if (collectionObject == null) {
 			csid = update.getObjectCsid() != null ? update.getObjectCsid() : "<empty>";
-			objectNumber = update.getObjectNumber() != null ? update.getObjectNumber() : "<empty>";
+			objectNumber = objectNumber != null ? objectNumber : "<empty>";
 			String message = String.format("Update %d failed: Could not find collection object by CSID='%s' and could not find using object number '%s'.",
 					update.getId(), csid, objectNumber);
 			logger.error(message);
@@ -210,7 +210,7 @@ public class CollectionSpaceRestUploader implements Uploader {
 		if (foundWithCsid == true) {
 			logger.debug("Found collection object for csid " + update.getObjectCsid() + ": " + collectionObject.toString());
 		} else {
-			logger.debug("Found collection object for objectNumber " + update.getObjectNumber() + ": " + collectionObject.toString());
+			logger.debug("Found collection object for objectNumber " + objectNumber + ": " + collectionObject.toString());
 		}
 
 		update.setBlobCsid(createBlob(update.getFilename(), update.getBinaryFile()));

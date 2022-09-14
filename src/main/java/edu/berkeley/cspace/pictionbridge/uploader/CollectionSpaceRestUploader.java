@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.client.HttpClient;
+import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
@@ -681,7 +682,10 @@ public class CollectionSpaceRestUploader implements Uploader {
 		BasicCredentialsProvider credentialsProvider =  new BasicCredentialsProvider();
 		credentialsProvider.setCredentials(AuthScope.ANY, credentials);
 		
-		HttpClient httpClient = HttpClients.custom().setDefaultCredentialsProvider(credentialsProvider).build();
+		HttpClient httpClient = HttpClients.custom()
+				.setDefaultCredentialsProvider(credentialsProvider)
+				.setConnectionReuseStrategy(new NoConnectionReuseStrategy())
+				.build();
 				
 		restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
 	}

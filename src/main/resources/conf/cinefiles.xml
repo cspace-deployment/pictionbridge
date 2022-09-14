@@ -33,7 +33,7 @@
 
 				<!-- Database connection info. -->
 				<!-- Use systemEnvironment to retrieve environment variables. -->
-				<property name="url" value="jdbc:postgresql://#{ systemEnvironment['PICTION_BRIDGE_DB_HOST'] }:#{ systemEnvironment['PICTION_BRIDGE_DB_PORT'] }/#{ systemEnvironment['PICTION_BRIDGE_DB_NAME'] }?ssl=true&amp;sslfactory=org.postgresql.ssl.NonValidatingFactory" />
+				<property name="url" value="jdbc:postgresql://#{ systemEnvironment['PICTION_BRIDGE_DB_HOST'] }:#{ systemEnvironment['PICTION_BRIDGE_DB_PORT'] }/#{ systemEnvironment['PICTION_BRIDGE_DB_NAME'] }?ssl=true&amp;sslmode=verify-ca&amp;sslfactory=org.postgresql.ssl.NonValidatingFactory" />
 				<property name="username" value="#{ systemEnvironment['PICTION_BRIDGE_DB_USER'] }" />
 				<property name="password" value="#{ systemEnvironment['PICTION_BRIDGE_DB_PW'] }" />
 			</bean>

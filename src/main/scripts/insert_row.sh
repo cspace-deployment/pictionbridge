@@ -18,7 +18,7 @@
 #	export PGPASSWORD=<password>
 #
 HOST="localhost"
-PORT="5678"
+PORT="5432"
 DBNAME="piction_transit"
 DBUSER="piction"
 DATAFILE=$1

@@ -1,5 +1,8 @@
 #!/bin/bash
 #
+# CAVEAT: This version is archived in this directory with other migration scripts and instructions.  
+#         Future changes should be maintained in the parent directory: .../pictionbridge/src/main/scripts. 
+#
 # Name: bampfa_metadata_etl.sh
 # 
 # Purpose:

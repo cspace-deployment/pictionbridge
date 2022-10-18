@@ -1,0 +1,219 @@
+-- Steps to migrate piction_transit from cspace-prod to blacklight-qa RDS.
+-- Will need to modify to migration from cspace-prod to blacklight-prod RDS.
+
+--
+-- DUMP piction schema from cspace-prod.
+--
+pg_dump -v -h dba-postgres-prod-45.ist.berkeley.edu -p 5415 piction_transit -U piction -n piction -F custom > ~/csc2051/piction_transit_20220830.dump
+
+##
+## CREATE database and roles as cspaceadmin on RDS.
+##
+psql -h blacklight-qa.ets.berkeley.edu -p 5432 -U cspaceadmin -d postgres
+
+--
+-- CREATE database.
+--
+CREATE DATABASE piction_transit;
+
+--
+-- CREATE users and roles.
+-- get passwords from app_bampfa's .pgpass file on cspace-prod
+--
+CREATE USER piction WITH PASSWORD 'xxxxxxxx';
+CREATE ROLE piction_app_role;
+CREATE USER piction_app WITH PASSWORD 'yyyyyyyy' IN ROLE piction_app_role; 
+
+\c piction_transit
+/*
+                                                                List of roles
+    Role name     |                         Attributes                         |                          Member of                          
+------------------+------------------------------------------------------------+-------------------------------------------------------------
+ cspaceadmin      | Create role, Create DB                                    +| {rds_superuser}
+                  | Password valid until infinity                              | 
+ piction          |                                                            | {}
+ piction_app      |                                                            | {piction_app_role}
+ piction_app_role | Cannot login                                               | {}
+ rds_ad           | Cannot login                                               | {}
+ rds_iam          | Cannot login                                               | {}
+ rds_password     | Cannot login                                               | {}
+ rds_replication  | Cannot login                                               | {}
+ rds_superuser    | Cannot login                                               | {pg_monitor,pg_signal_backend,rds_replication,rds_password}
+ rdsadmin         | Superuser, Create role, Create DB, Replication, Bypass RLS+| {}
+                  | Password valid until infinity                              | 
+ rdsrepladmin     | No inheritance, Cannot login, Replication                  | {}
+ rdstopmgr        |                                                            | {pg_monitor}
+*/
+
+--
+-- CREATE schema.
+--
+CREATE SCHEMA piction;
+GRANT USAGE ON SCHEMA piction TO piction_app_role;
+ALTER SCHEMA piction OWNER TO piction;
+
+--
+-- SET default tablespace.
+--
+SET default_tablespace = '';
+
+--
+-- CONNECT to piction_transit database as piction user.
+--
+\c piction_transit piction
+
+--
+-- CREATE table bampfa_metadata_mv as piction user.
+--
+CREATE TABLE piction.bampfa_metadata_mv (
+    objectcsid character varying,
+    idnumber text,
+    sortobjectnumber character varying,
+    artistcalc character varying,
+    artistorigin text,
+    title character varying,
+    datemade character varying,
+    site character varying,
+    itemclass text,
+    materials text,
+    measurement text,
+    fullbampfacreditline text,
+    copyrightcredit character varying,
+    photocredit character varying,
+    subjects text,
+    collections text,
+    periodstyles text,
+    artistdates text,
+    caption text,
+    tags text,
+    permissiontoreproduce character varying,
+    acquisitionsource character varying,
+    legalstatus text,
+    updatedat timestamp without time zone
+);
+
+--
+-- GRANTS
+--
+GRANT SELECT on piction.bampfa_metadata_mv to piction_app_role;
+
+##
+## EXPORT bampfa_metadata_mv data from cspace-prod.
+##
+psql -h dba-postgres-prod-45.ist.berkeley.edu -p 5313 -d bampfa_domain_bampfa -U nuxeo_bampfa -f extract_bampfa_metadata_mv.sql
+--
+-- SELECT 25052 COPY 25052
+
+##
+## TRANSFER bampfa_metadata_mv data file from cspace-prod to local.
+##
+cd ~/jira/csc2051
+sftpcsp
+cd csc2051
+mget bampfa_metadata_mv.csv
+mget piction_transit_20220830.dump
+
+##
+## LOAD data into piction.bampfa_metadata_mv table in piction_transit database.
+## Requires full tunnel to connect (or connect from permitted locations.
+##
+psql -h blacklight-qa.ets.berkeley.edu -p 5432 -d piction_transit -U piction -f ~/jira/csc2051/load_bampfa_metadata_mv.sql
+-- COPY 25052
+
+## 
+## CREATE table and load data from cspace-prod into piction_transit RDS tables.
+##
+pg_restore -h blacklight-qa.ets.berkeley.edu -p 5432 -U piction -d piction_transit -t piction_interface -t piction_history ~/jira/csc2051/piction_transit_20220830.dump
+
+pg_restore -v -h blacklight-qa.ets.berkeley.edu -p 5432 -U piction -d piction_transit -t piction_interface_cinefiles -t piction_history_cinefiles ~/jira/csc2051/piction_transit_20220830.dump
+
+##
+## Reconnect to piction_transit database as piction user
+##
+psql -h blacklight-qa.ets.berkeley.edu -p 5432 -d piction_transit -U piction
+
+--
+-- CREATE and SET sequences.
+--
+CREATE SEQUENCE piction.piction_interface_id_seq;
+CREATE SEQUENCE piction_interface_cinefiles_id_seq; 
+
+ALTER TABLE piction.piction_interface_id_seq OWNER TO piction;
+ALTER TABLE piction.piction_interface_cinefiles_id_seq OWNER TO piction;
+
+ALTER SEQUENCE piction_interface_id_seq OWNED BY piction_interface_cinefiles.id;
+ALTER SEQUENCE piction_interface_cinefiles_id_seq OWNED BY piction_interface_cinefiles.id;
+
+ALTER TABLE ONLY piction.piction_interface ALTER COLUMN id SET DEFAULT nextval('piction.piction_interface_id_seq'::regclass);
+ALTER TABLE ONLY piction.piction_interface_cinefiles ALTER COLUMN id SET DEFAULT nextval('piction.piction_interface_cinefiles_id_seq'::regclass);
+
+SELECT pg_catalog.setval('piction.piction_interface_cinefiles_id_seq', 4940, true);
+SELECT pg_catalog.setval('piction.piction_interface_id_seq', 8410, true);
+
+--
+-- CREATE indexes.
+--
+ALTER TABLE ONLY piction.piction_interface ADD CONSTRAINT piction_interface_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY piction.piction_interface_cinefiles ADD CONSTRAINT piction_interface_cinefiles_pkey PRIMARY KEY (id);
+
+-- Renamed idx_pictintf to piction_interface_piction_id_idx for consistency.
+CREATE INDEX piction_interface_piction_id_idx ON piction.piction_interface USING btree (piction_id);
+CREATE INDEX piction_interface_cinefiles_piction_id_idx ON piction.piction_interface_cinefiles USING btree (piction_id);
+
+CREATE INDEX piction_history_cinefiles_object_number_idx ON piction.piction_history_cinefiles USING btree (object_number);
+
+--
+-- GRANT privileges.
+--
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE piction.piction_interface TO piction_app_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE piction.piction_interface_cinefiles TO piction_app_role;
+
+GRANT USAGE ON SEQUENCE piction.piction_interface_id_seq TO piction_app_role;
+GRANT USAGE ON SEQUENCE piction.piction_interface_cinefiles_id_seq TO piction_app_role;
+
+--
+-- THE END
+--
+
+--
+-- Checks.
+--
+set search_path to public, piction;
+\l
+\du
+\dn
+\dx
+\d
+\di
+\ds
+\z
+
+select count(*) from bampfa_metadata_mv;
+select count(*) from piction_interface;
+select count(*) from piction_history;
+select count(*) from piction_interface_cinefiles;
+select count(*) from piction_history_cinefiles;
+
+select max(id) from piction_interface;
+select last_value from piction_interface_id_seq;
+
+select max(id) from piction_interface_cinefiles;
+select last_value from piction_interface_cinefiles_id_seq;
+
+##
+## Create Cron job as app_cspace on blacklight-(qa|prod)
+##
+crontab -e
+
+## append the following to crontab:
+
+##################################################################################
+#
+# BAMPFA Piction job
+#
+##################################################################################
+# refresh BAMPFA Piction metadata daily at 5 min past Midnight (Runtime: ~ 1 min)
+##################################################################################
+5 0 * * * ${HOME}/bin/bampfa_metadata_etl.sh > /dev/null 2>&1
+##################################################################################
+
